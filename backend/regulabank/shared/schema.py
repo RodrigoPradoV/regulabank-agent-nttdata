@@ -30,31 +30,36 @@ NORMS = pa.schema([
     ("synthetic", pa.bool_()),
 ])
 
-# Una fila por chunk. text == version_text[start:end]; sin solape; ids por contenido.
+# Una fila por chunk (esquema fijado por el dueño el 2026-10-17). text es literal del original; sin solape.
+NODE_TYPES = ("article", "section", "paragraph", "annex", "provision")
+EXTRACTION_METHODS = ("regex", "markdown", "ocr", "manual")
+
 CHUNKS = pa.schema([
-    ("chunk_id", pa.string()),         # c_ + sha1(version_id:start:end)[:16]
+    ("chunk_id", pa.string()),            # c_ + sha1(norm_id:article_id:page_start:start)[:16]
     ("norm_id", pa.string()),
     ("norm_short", pa.string()),
-    ("norm_kind", pa.string()),
-    ("article_id", pa.string()),       # {norm_id}#art-12   (politicas: #sec-5.2)
-    ("article_no", pa.string()),       # 12, 12-A, 5.2
-    ("path", pa.string()),             # TITULO II > CAPITULO I > Articulo 12 > 12.3
-    ("version_id", pa.string()),       # {article_id}@v1
-    ("version_n", pa.int32()),
+    ("title", pa.string()),               # titulo de la norma
+    ("issuer", pa.string()),
+    ("jurisdiction", pa.string()),        # PE
+    ("norm_kind", pa.string()),           # NORM_KINDS
+    ("status", pa.string()),              # NORM_STATUS
+    ("published", pa.string()),           # ISO date
     ("valid_from", pa.string()),
-    ("valid_to", pa.string()),         # null = vigente
-    ("change_kind", pa.string()),      # CHANGE_KINDS
-    ("changed_by", pa.string()),       # norm_id de la modificatoria o null
-    ("start", pa.int32()),             # offsets sobre el texto de la version (articulo)
-    ("end", pa.int32()),
-    ("chunk_index", pa.int32()),
-    ("n_chunks", pa.int32()),
-    ("prev_chunk_id", pa.string()),
-    ("next_chunk_id", pa.string()),
+    ("valid_to", pa.string()),            # null = vigente
+    ("source_url", pa.string()),
+    ("source_path", pa.string()),
+    ("source_sha256", pa.string()),
+    ("article_id", pa.string()),          # {norm_id}#art-12   (politicas: #sec-5.2)
+    ("article_no", pa.string()),
+    ("node_type", pa.string()),           # NODE_TYPES
+    ("parent_path", pa.string()),         # TITULO II > CAPITULO I > Articulo 12
     ("page_start", pa.int32()),
     ("page_end", pa.int32()),
     ("text", pa.string()),
-    ("citation", pa.string()),         # Res. SBS N.° 11356-2008, art. 12, p. 4 (vigente desde 2019-04-01)
+    ("citation", pa.string()),            # Res. SBS N.° 11356-2008, art. 12, p. 4
+    ("extraction_method", pa.string()),   # EXTRACTION_METHODS
+    ("confidence", pa.float32()),         # 1.0 regex limpio; menor si OCR o parse dudoso
+    ("review_required", pa.bool_()),
 ])
 
 ENTITY_TYPES = (
