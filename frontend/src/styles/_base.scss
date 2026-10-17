@@ -53,3 +53,49 @@ h1, h2, h3, p { margin: 0; }
 .mono { font-family: var(--font-mono); font-size: var(--font-size-sm); }
 .muted { color: var(--text-secondary); }
 .quote { border-left: 3px solid var(--text-primary); padding: var(--spacing-sm) var(--spacing-md); background: var(--bg-tertiary); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-style: italic; }
+
+// ── Color por área (paleta de acentos del ERP: Knot Navy, Blueberry, Hot Mustard, Twist of Purple) ──
+// Tinta legible sobre blanco, relleno saturado, lavado de fondo. Se declara con data-area y todo lee las tres.
+:root, [data-area='all'] { --area-ink: #1d1d1f; --area-fill: #3a3a3c; --area-soft: #f2f2f4; }
+[data-area='corpus'] { --area-ink: #2d4db5; --area-fill: #5b74d4; --area-soft: #eaeef9; }
+[data-area='graph'] { --area-ink: #3f63e0; --area-fill: #6e92ff; --area-soft: #eef2ff; }
+[data-area='search'] { --area-ink: #6f7d00; --area-fill: #d6eb52; --area-soft: #f7fadf; }
+[data-area='agents'] { --area-ink: #6a46b8; --area-fill: #a17be8; --area-soft: #f2ecfb; }
+
+// ── Reglas de las vistas analíticas del ERP (sa-panel, summary-card, sa-bars) ──
+.page { display: flex; flex-direction: column; gap: var(--spacing-lg); animation: rise 360ms cubic-bezier(0.32, 0.72, 0, 1); }
+.page-kicker.area { display: inline-flex; align-items: center; gap: 8px; color: var(--area-ink); text-transform: none; letter-spacing: -0.01em; font-size: var(--font-size-sm);
+  &::before { content: ''; width: 8px; height: 8px; border-radius: 4px; background: var(--area-fill); } }
+.tnum { font-feature-settings: 'tnum' 1; font-variant-numeric: tabular-nums; }
+.panel { background: var(--bg-primary); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 20px; padding: 20px 24px 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; gap: var(--spacing-md); min-width: 0; }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--spacing-md); flex-wrap: wrap; }
+.panel-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; }
+.panel-caption { font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--area-ink); }
+.panel-note { font-size: 13px; color: var(--text-secondary); line-height: 1.5; max-width: 760px; }
+.summary { background: var(--bg-primary); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 20px; padding: 22px 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: var(--spacing-lg); @media (max-width: 760px) { grid-template-columns: 1fr 1fr; } }
+.figure { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.figure-label { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--text-secondary); letter-spacing: -0.01em; }
+.figure-value { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); letter-spacing: -0.02em; line-height: 1.15; font-feature-settings: 'tnum' 1; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; &.accent { color: var(--area-ink); } }
+.figure-sub { font-size: var(--font-size-xs); color: var(--text-secondary); }
+.pill.ink { background: var(--text-primary); color: var(--text-inverse); }
+.pill.gray { background: rgba(0, 0, 0, 0.06); color: var(--text-secondary); }
+.pill.area { background: var(--area-soft); color: var(--area-ink); }
+.seg { display: inline-flex; gap: 3px; padding: 3px; background: #e9e9ec; border-radius: 12px;
+  button { appearance: none; border: 0; background: transparent; padding: 7px 14px; border-radius: 9px; font: inherit; font-size: var(--font-size-sm); font-weight: var(--font-weight-medium); color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+    &.on, &.active { background: var(--bg-primary); color: var(--text-primary); font-weight: var(--font-weight-semibold); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); } } }
+.src { font-size: 11px; color: var(--text-tertiary); line-height: 1.4; }
+.tip { position: fixed; z-index: 700; pointer-events: none; max-width: 360px; padding: 9px 12px; background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: var(--text-primary); font-size: var(--font-size-sm); line-height: 1.45; border-radius: 12px; border: 1px solid rgba(0, 0, 0, 0.06); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); white-space: pre-line; }
+// Lista tipográfica (sa-bars): nombre y cifra arriba, nota debajo; nunca tablas de admin para cosas que se leen.
+.rows { display: flex; flex-direction: column; list-style: none; padding: 0; margin: 0; }
+.row { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 14px; padding: 12px 6px; margin: 0 -6px; border-radius: 12px; border-top: 1px solid rgba(0, 0, 0, 0.05); transition: background var(--transition-fast);
+  &:first-child { border-top: 0; } &:hover { background: var(--bg-hover); } }
+.row-num { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--area-ink); background: var(--area-soft); width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-top: 1px; }
+.row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.row-name { font-size: var(--font-size-md); font-weight: var(--font-weight-semibold); color: var(--text-primary); letter-spacing: -0.01em; }
+.row-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.row-role { font-size: var(--font-size-base); color: var(--text-primary); margin-top: 2px; }
+.row-sub { font-size: var(--font-size-sm); color: var(--text-secondary); margin-top: 3px; line-height: 1.5; max-width: 780px; }
+.row.rejected { .row-name, .row-role { color: var(--text-tertiary); text-decoration: line-through; text-decoration-color: rgba(0, 0, 0, 0.25); } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }

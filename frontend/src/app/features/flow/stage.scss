@@ -1,28 +1,17 @@
-.back { text-decoration: none; display: inline-flex; align-items: center; gap: 2px; &:hover { color: var(--text-primary); } }
+.back { text-decoration: none; display: inline-flex; align-items: center; gap: 2px; color: var(--text-secondary); &:hover { color: var(--text-primary); } }
+.sep { color: var(--text-tertiary); margin: 0 2px; }
 .meta { display: flex; gap: var(--spacing-sm); align-items: center; }
-.io { display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: var(--spacing-sm); align-items: stretch; margin-bottom: var(--spacing-lg);
+.io { display: grid; grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr); gap: var(--spacing-sm); align-items: stretch;
   @media (max-width: 900px) { grid-template-columns: 1fr; .io-arrow { height: 44px; app-icon { transform: rotate(90deg); } } } }
-.io-card { background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 20px; padding: 18px 22px 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.io-card { background: var(--bg-primary); border: 1px solid rgba(0, 0, 0, 0.06); border-radius: 20px; padding: 18px 22px 20px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .io-tag { display: inline-flex; align-self: flex-start; padding: 3px 10px; border-radius: var(--radius-full); font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); letter-spacing: 0.02em; text-transform: uppercase; background: var(--area-soft); color: var(--area-ink); }
 .io-card.out .io-tag { background: var(--text-primary); color: var(--text-inverse); }
 .io-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; }
 .io-body { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: var(--font-size-md); line-height: 1.55; }
 .io-arrow { display: flex; align-items: center; justify-content: center; color: var(--area-ink); app-icon { background: var(--area-soft); border-radius: 50%; padding: 8px; } }
-.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--spacing-sm); margin-bottom: var(--spacing-lg); }
-.figure { background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: var(--radius-lg); padding: var(--spacing-md) var(--spacing-lg); display: flex; flex-direction: column; gap: 4px; }
-.figure-label { font-size: var(--font-size-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
-.figure-value { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); letter-spacing: -0.02em; color: var(--area-ink); font-variant-numeric: tabular-nums; word-break: break-all; }
-.panel { padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
-.panel-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: var(--spacing-md); flex-wrap: wrap; }
-.panel-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
-.panel-caption { font-size: var(--font-size-sm); color: var(--text-secondary); }
-.strong { font-weight: var(--font-weight-semibold); color: var(--text-primary); }
-.why { font-size: var(--font-size-sm); max-width: 360px; }
-tr.rejected td { opacity: 0.6; }
 .kv { display: flex; flex-direction: column; }
-.kv-row { display: grid; grid-template-columns: minmax(160px, 28%) 1fr; gap: var(--spacing-md); padding: 10px 0; border-top: 1px solid var(--border-light); &:first-child { border-top: 0; } }
-.kv-k { font-size: var(--font-size-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.03em; padding-top: 3px; }
-.kv-v { display: flex; flex-direction: column; gap: 2px; }
-.kv-src { font-size: var(--font-size-xs); color: var(--text-tertiary); }
-.src { font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--spacing-lg); }
+.kv-row { display: grid; grid-template-columns: minmax(120px, 32%) 1fr; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(0, 0, 0, 0.05); font-size: 13px; line-height: 1.5; &:first-child { border-top: 0; } }
+.kv-k { color: var(--text-secondary); font-weight: var(--font-weight-medium); }
+.kv-v { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; b { font-weight: var(--font-weight-semibold); } }
+.kv-src { font-size: 11px; color: var(--text-tertiary); }
 .pager { display: flex; justify-content: space-between; gap: var(--spacing-md); a { text-decoration: none; } }

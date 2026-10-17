@@ -1,14 +1,13 @@
 @if (stage(); as s) {
-  <div class="stage-page" [style.--area-ink]="ink[s.area].ink" [style.--area-soft]="ink[s.area].soft">
+  <div class="page" [attr.data-area]="s.area">
     <div class="page-header">
       <div>
-        <p class="page-kicker"><a routerLink="/flow" class="back"><app-icon name="caret-left" size="xs" /> Recorrido</a> · {{ areaLabel[s.area] }} · etapa {{ index() + 1 }}</p>
+        <p class="page-kicker area"><a routerLink="/flow" class="back"><app-icon name="caret-left" size="xs" /> Recorrido</a><span class="sep">·</span>{{ areaLabel[s.area] }}<span class="sep">·</span>etapa {{ index() + 1 }} de {{ pipeline()?.stages?.length }}</p>
         <h1 class="page-title">{{ s.label }}</h1>
         <p class="page-subtitle">{{ s.summary }}</p>
       </div>
       <div class="meta">
         <span class="pill" [class]="'pill ' + statusClass(s.status)">{{ statusLabel(s.status) }}</span>
-        <span class="pill mono">{{ s.doc }}</span>
       </div>
     </div>
 
@@ -27,46 +26,63 @@
     </div>
 
     @if (countRows().length) {
-      <section class="summary">
-        @for (c of countRows(); track c[0]) {
-          <div class="figure"><span class="figure-label">{{ c[0] }}</span><span class="figure-value">{{ fmt(c[1]) }}</span></div>
+      <section class="summary" [style.--cols]="countRows().length">
+        @for (c of countRows(); track c[0]; let first = $first) {
+          <div class="figure"><span class="figure-label">{{ c[0] }}</span><span class="figure-value" [class.accent]="first">{{ fmt(c[1]) }}</span><span class="figure-sub">{{ s.status === 'pending' ? 'sin manifiesto todavía' : 'del manifiesto del release' }}</span></div>
         }
       </section>
     }
 
-    <section class="card panel">
+    <section class="panel">
       <div class="panel-head"><h2 class="panel-title">Transformers y código de la etapa</h2><span class="panel-caption">{{ active().length }} en uso · {{ rejected().length }} descartados</span></div>
-      <table class="table">
-        <thead><tr><th>Modelo</th><th>Papel</th><th>Familia</th><th>Tamaño</th><th>Corre en</th><th>Estado</th><th>Por qué</th></tr></thead>
-        <tbody>
-          @for (m of active(); track m.name) {
-            <tr>
-              <td class="mono strong">{{ m.name }}</td><td>{{ m.role }}</td><td>{{ familyLabel(m) }}</td><td class="mono">{{ m.size }}</td><td class="mono">{{ m.runs_on }}</td>
-              <td><span class="pill" [class]="'pill ' + statusClass(m.status)">{{ statusLabel(m.status) }}</span></td><td class="muted why">{{ m.why }}</td>
-            </tr>
-          }
-          @for (m of rejected(); track m.name) {
-            <tr class="rejected">
-              <td class="mono strong">{{ m.name }}</td><td>{{ m.role }}</td><td>{{ familyLabel(m) }}</td><td class="mono">{{ m.size }}</td><td class="mono">{{ m.runs_on }}</td>
-              <td><span class="pill danger">{{ statusLabel(m.status) }}</span></td><td class="muted why">{{ m.why }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <p class="panel-note">Cada fila dice qué hace el modelo aquí y por qué está (o por qué no), con la cifra que lo decidió cuando existe.</p>
+      <ol class="rows">
+        @for (m of active(); track m.name; let i = $index) {
+          <li class="row">
+            <span class="row-num">{{ i + 1 }}</span>
+            <div>
+              <div class="row-head">
+                <span class="row-name">{{ m.name }}</span>
+                <span class="row-meta">
+                  <span class="pill area">{{ familyLabel(m) }}</span>
+                  <span class="pill gray">{{ m.size }}</span>
+                  <span class="pill gray">{{ m.runs_on }}</span>
+                  <span class="pill" [class]="'pill ' + statusClass(m.status)">{{ statusLabel(m.status) }}</span>
+                </span>
+              </div>
+              <p class="row-role">{{ m.role }}</p>
+              <p class="row-sub">{{ m.why }}</p>
+            </div>
+          </li>
+        }
+        @for (m of rejected(); track m.name) {
+          <li class="row rejected">
+            <span class="row-num"><app-icon name="x" size="xs" /></span>
+            <div>
+              <div class="row-head">
+                <span class="row-name">{{ m.name }}</span>
+                <span class="row-meta"><span class="pill gray">{{ familyLabel(m) }}</span><span class="pill danger">{{ statusLabel(m.status) }}</span></span>
+              </div>
+              <p class="row-role">{{ m.role }}</p>
+              <p class="row-sub">{{ m.why }}</p>
+            </div>
+          </li>
+        }
+      </ol>
     </section>
 
     @if (s.params.length) {
-      <section class="card panel">
+      <section class="panel">
         <div class="panel-head"><h2 class="panel-title">Parámetros con procedencia</h2><span class="panel-caption">una regla, no un número</span></div>
         <div class="kv">
           @for (p of s.params; track p.name) {
-            <div class="kv-row"><span class="kv-k">{{ p.name }}</span><span class="kv-v">{{ p.value }}<span class="kv-src">fuente: {{ p.source }}</span></span></div>
+            <div class="kv-row"><span class="kv-k">{{ p.name }}</span><span class="kv-v"><b>{{ p.value }}</b><span class="kv-src">{{ p.source }}</span></span></div>
           }
         </div>
       </section>
     }
 
-    <p class="src">Código: <span class="mono">{{ s.code }}</span> · Diseño: <span class="mono">{{ s.doc }}</span></p>
+    <p class="src">Código: {{ s.code }} · Diseño: {{ s.doc }}</p>
 
     <div class="pager">
       @if (prev(); as p) { <a class="btn btn-secondary" [routerLink]="['/flow', p.id]"><app-icon name="caret-left" size="sm" /> {{ p.label }}</a> } @else { <span></span> }
