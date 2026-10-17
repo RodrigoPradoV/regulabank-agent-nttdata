@@ -1,0 +1,48 @@
+catalog_id,type,name,aliases
+reg-sbs,regulator,SBS,"Superintendencia de Banca, Seguros y AFP|Superintendencia de Banca y Seguros|la Superintendencia|Superintendencia"
+reg-bcrp,regulator,BCRP,Banco Central de Reserva del Perú|Banco Central de Reserva|Banco Central
+reg-uif,regulator,UIF-Perú,UIF|Unidad de Inteligencia Financiera del Perú|Unidad de Inteligencia Financiera|UIF-Peru
+reg-smv,regulator,SMV,Superintendencia del Mercado de Valores
+reg-indecopi,regulator,INDECOPI,Instituto Nacional de Defensa de la Competencia y de la Protección de la Propiedad Intelectual
+reg-mef,regulator,MEF,Ministerio de Economía y Finanzas
+reg-congreso,regulator,Congreso de la República,Congreso
+reg-fsd,regulator,Fondo de Seguro de Depósitos,FSD
+inst-esf,institution_type,empresa del sistema financiero,empresas del sistema financiero|empresa supervisada|empresas supervisadas|entidad financiera|entidades financieras|empresas del sistema financiero y de seguros
+inst-banco,institution_type,banco,bancos|empresa bancaria|empresas bancarias|banca múltiple
+inst-financiera,institution_type,financiera,financieras|empresa financiera|empresas financieras
+inst-cmac,institution_type,caja municipal,cajas municipales|caja municipal de ahorro y crédito|cajas municipales de ahorro y crédito|CMAC
+inst-crac,institution_type,caja rural,cajas rurales|caja rural de ahorro y crédito|cajas rurales de ahorro y crédito|CRAC
+inst-edpyme,institution_type,EDPYME,EDPYMES|entidad de desarrollo de la pequeña y microempresa|entidades de desarrollo de la pequeña y microempresa
+inst-coop,institution_type,cooperativa,cooperativas|cooperativa de ahorro y crédito|cooperativas de ahorro y crédito|COOPAC
+inst-afp,institution_type,AFP,administradora de fondos de pensiones|administradoras de fondos de pensiones
+inst-seguros,institution_type,empresa de seguros,empresas de seguros|aseguradora|aseguradoras
+inst-sujeto-obligado,institution_type,sujeto obligado,sujetos obligados
+risk-credito,risk,riesgo de crédito,riesgo crediticio|riesgos de crédito
+risk-mercado,risk,riesgo de mercado,riesgos de mercado
+risk-liquidez,risk,riesgo de liquidez,riesgos de liquidez
+risk-operacional,risk,riesgo operacional,riesgos operacionales|riesgo de operación
+risk-laft,risk,riesgo de lavado de activos y del financiamiento del terrorismo,riesgos de LA/FT|riesgo de LA/FT|riesgos LA/FT|riesgo LA/FT|lavado de activos y financiamiento del terrorismo|lavado de activos y del financiamiento del terrorismo|LA/FT|LAFT|lavado de activos
+risk-ciber,risk,riesgo de ciberseguridad,ciberseguridad|riesgos de ciberseguridad|seguridad de la información
+risk-sobreendeudamiento,risk,riesgo de sobreendeudamiento,sobreendeudamiento
+risk-tasa,risk,riesgo de tasa de interés,riesgo de tasa de interés en el libro bancario
+risk-cambiario,risk,riesgo cambiario,riesgo cambiario crediticio|riesgo de tipo de cambio
+risk-reputacional,risk,riesgo reputacional,riesgo de reputación
+risk-pais,risk,riesgo país,riesgo pais
+prod-hipotecario,product,crédito hipotecario,créditos hipotecarios|crédito hipotecario para vivienda|créditos hipotecarios para vivienda
+prod-tarjeta,product,tarjeta de crédito,tarjetas de crédito
+prod-deposito-plazo,product,depósito a plazo,depósitos a plazo|depósito a plazo fijo|depósitos a plazo fijo
+prod-ahorro,product,depósito de ahorro,depósitos de ahorro|cuenta de ahorros|cuentas de ahorro|cuenta de ahorro
+prod-consumo,product,crédito de consumo,créditos de consumo|crédito de consumo revolvente|créditos de consumo revolvente|crédito de consumo no revolvente
+prod-mype,product,crédito a microempresas,créditos a microempresas|crédito a pequeñas empresas|créditos a pequeñas empresas|crédito MYPE|créditos MYPE
+prod-corporativo,product,crédito corporativo,créditos corporativos
+prod-cts,product,CTS,compensación por tiempo de servicios|depósito CTS|depósitos CTS
+prod-carta-fianza,product,carta fianza,cartas fianza
+prod-leasing,product,arrendamiento financiero,leasing
+prod-transferencia,product,transferencia de fondos,transferencias de fondos|giro|giros
+report-ros,report,Reporte de Operaciones Sospechosas,ROS|reporte de operaciones sospechosas
+report-ro,report,Registro de Operaciones,RO|registro de operaciones
+role-oficial-cumplimiento,role,Oficial de Cumplimiento,oficial de cumplimiento|Oficial de Cumplimiento Corporativo
+role-directorio,role,Directorio,directorio
+role-gerencia-general,role,Gerencia General,gerencia general|Gerente General|gerente general
+role-auditoria-interna,role,Auditoría Interna,auditoría interna|Unidad de Auditoría Interna
+role-unidad-riesgos,role,Unidad de Riesgos,unidad de riesgos|Gerencia de Riesgos

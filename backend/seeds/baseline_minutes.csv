@@ -1,0 +1,10 @@
+scenario,minutes_human,source
+lookup,30,sow_assumption
+definition,30,derived_from_sow
+threshold,30,sow_assumption
+procedure,35,derived_from_sow
+validity,25,sow_assumption
+crossref,35,sow_assumption
+policy_vs_norm,42.5,sow_assumption
+impact,45,derived_from_sow
+negative,20,sow_assumption

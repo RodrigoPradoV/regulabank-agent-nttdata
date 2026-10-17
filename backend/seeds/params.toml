@@ -1,0 +1,48 @@
+# Parametros efectivos de la etapa graphs. Cada valor lleva su fuente; un numero sin motivo no entra.
+# Los leen regulabank.graphs.{entities,aggregate,edges,ppr} y se copian al graph_manifest.json de cada build.
+
+[entities]
+# docs/04-entities.md, "Curaduria por entidad": una entidad entra si aparece en >= 2 chunks,
+# salvo los tipos que valen con una sola ocurrencia (definiciones y referencias normativas).
+min_chunks = 2
+always_keep_types = ["defined_term", "norm_ref", "article_ref"]
+# docs/04-entities.md, "Modelos" y "Filtro y voto": GLiNER2 extrae con umbral bajo (0.3) y guarda el score;
+# una mencion cuenta para entidades y aristas si score >= 0.5 (sin voto clasico en esta version).
+gliner2_model = "fastino/gliner2-large-v1"
+gliner2_threshold = 0.3
+gliner2_cut = 0.5
+gliner2_labels = ["role", "product", "sanction", "report", "obligation"]
+
+[edges]
+# docs/05-relations.md B: SIMILAR es kNN por embedding con k = 10 entre normas distintas.
+similar_k = 10
+# docs/05-relations.md B, SHARES_TERM: "misma entidad rara (df bajo)". Rara = df por debajo del percentil 90
+# de las entidades y df > 1 (df = 1 no comparte nada). El tope por chunk evita que un termino medio
+# comun produzca un clique; 20 es el mismo tope que el kNN duplicado.
+shares_entity_df_percentile = 90
+shares_entity_cap_per_chunk = 20
+
+[ppr]
+# docs/06-graphs.md: alpha = 0.5 (reinicio), 30 iteraciones de potencia.
+alpha = 0.5
+iters = 30
+
+[ppr.edge_weights]
+# source: docs/06-graphs.md, tabla "Grafo en memoria para PageRank".
+NEXT = 0.5            # source: "contexto local"
+PARENT = 1.0          # source: BELONGS_TO chunk<->articulo "las piezas de un mismo articulo se sostienen"
+REFERS_TO = 1.0       # source: "multi salto explicito; es la arista mas valiosa de este dominio"
+MODIFIES = 0.7        # source: "la version nueva hereda la relevancia de la vieja" (via articulo)
+REPLACES = 0.7        # source: idem MODIFIES
+# MENTIONS, SHARES_ENTITY y SIMILAR no llevan constante: MENTIONS y SHARES_ENTITY pesan idf = log(n/(1+df))
+# ("una entidad comun no conecta nada") y SIMILAR pesa el coseno ("rescate semantico").
+# mentions_floor: peso minimo para que la arista MENTIONS de una entidad omnipresente (idf <= 0) siga
+# existiendo en FalkorDB para explicar, sin mover el PageRank (dos ordenes por debajo de NEXT).
+mentions_floor = 0.01
+
+[embed]
+# docs/07-embeddings.md: embeddinggemma-300m gano en espanol (nDCG@8 0.718); multilingual-e5-small es el
+# repuesto si gemma esta cerrado (gated) o no descargable.
+model = "google/embeddinggemma-300m"
+fallback_model = "intfloat/multilingual-e5-small"
+batch_size = 32

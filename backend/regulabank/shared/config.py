@@ -17,6 +17,7 @@ class Settings:
     release_id: str
     budget_usd_per_run: float
     http_user_agent: str
+    embed_model: str
 
 
 def load() -> Settings:
@@ -30,4 +31,5 @@ def load() -> Settings:
         release_id=os.getenv("RELEASE_ID", "current"),
         budget_usd_per_run=float(os.getenv("BUDGET_USD_PER_RUN", "2.0")),
         http_user_agent=os.getenv("HTTP_USER_AGENT", "regulabank-hack/0.1"),
+        embed_model=os.getenv("EMBED_MODEL", "google/embeddinggemma-300m"),
     )
