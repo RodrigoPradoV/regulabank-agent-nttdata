@@ -1,7 +1,7 @@
 # graph_v1: corpus real + normas sintéticas, listo para el demo
 
 3.171 chunks (2.976 del corpus v0 con `published` + 195 de las 17 normas sintéticas de `seeds/norms.csv`), 3.120 entidades,
-34 normas, 49.133 aristas (NEXT, REFERS_TO, MENTIONS, SIMILAR). Vectores `embeddinggemma-300m`; menciones GLiNER2 del pod
+34 normas, 50.033 aristas (NEXT, REFERS_TO, MENTIONS, SIMILAR). Vectores `embeddinggemma-300m`; menciones GLiNER2 del pod
 (corpus real) y de la Mac (sintéticas).
 
 ## Levantar el demo
