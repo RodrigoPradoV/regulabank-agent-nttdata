@@ -1,24 +1,22 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, viewChild } from '@angular/core';
+import * as d3 from 'd3';
 
-interface Step { id: string; label: string; tool: string; text: string; fields?: string[]; }
+interface Step { id: string; label: string; tool: string; brief: string; }
 
-// Una sola línea: nueve pasos, de izquierda a derecha. Clic en un paso muestra su descripción debajo.
+// Diagrama de flujo: una caja por paso con título, herramienta y descripción corta adentro; sin colores ni clics.
 const STEPS: Step[] = [
-  { id: 'corpus', label: 'Corpus', tool: 'seeds/norms.csv + PDF', text: 'Un Parquet con los metadatos de cada documento. El original se guarda tal cual con su sha256.',
-    fields: ['norm_id', 'short', 'title', 'kind', 'issuer', 'published', 'valid_from', 'valid_to', 'status', 'topics', 'source_url', 'source_sha256', 'synthetic'] },
-  { id: 'extract', label: 'Ingesta', tool: 'pymupdf', text: 'Texto por página con offsets estables. OCR solo si la página es imagen. El texto no se toca después: las citas se verifican contra él.',
-    fields: ['norm_id', 'page', 'text'] },
-  { id: 'chunks', label: 'Chunks', tool: 'regex de estructura', text: 'Un chunk por artículo (los largos se parten por numeral), sin solape, id por contenido. Cada chunk sabe su versión, vigencia y página.',
-    fields: ['chunk_id', 'norm_id', 'article_id', 'article_no', 'path', 'version_id', 'valid_from', 'valid_to', 'change_kind', 'changed_by', 'page_start', 'page_end', 'start', 'end', 'text', 'citation'] },
-  { id: 'entities', label: 'Entidades', tool: 'regex + GLiNER2 large', text: 'Lo formulaico por regex (norma, artículo, plazo, monto, porcentaje, término definido); lo abierto con GLiNER2 (rol, producto, sanción, reporte, obligación). Cada mención con start y end verificados.',
-    fields: ['mention_id', 'chunk_id', 'entity_id', 'type', 'mention', 'start', 'end', 'score', 'method', 'value'] },
-  { id: 'embed', label: 'Embeddings', tool: 'embeddinggemma-300m + BM25', text: 'Un vector por chunk en LanceDB con encabezado «norma, art. N» y un índice léxico en español. El embedding manda; BM25 vota.' },
-  { id: 'graph', label: 'Grafo', tool: 'FalkorDB + PageRank', text: 'Aristas NEXT, REFERS_TO, SHARES_ENTITY, SIMILAR, MENTIONS y MODIFIES / REPEALS entre normas. PageRank personalizado en memoria para el multi salto.',
-    fields: ['src', 'src_kind', 'dst', 'dst_kind', 'type', 'weight', 'method', 'evidence'] },
-  { id: 'conflicts', label: 'Conflictos', tool: 'reglas + xlm-roberta-large-xnli', text: 'Política interna contra norma: si los dos lados tienen valor (12 % contra 10 %, 20 contra 15 días) decide la regla; si no, el NLI. Una persona confirma antes de que cuente.' },
-  { id: 'retrieve', label: 'Recuperación', tool: 'denso + BM25 + PPR', text: 'Pregunta y fecha de vigencia → 8 chunks con cita. Las versiones no vigentes a esa fecha pasan a historia, nunca desaparecen.' },
-  { id: 'answer', label: 'Respuesta', tool: 'OpenAI + verificador', text: 'El modelo redacta con una cita por afirmación; el código comprueba cita literal, vigencia y números; si el riesgo lo pide, una persona aprueba antes de entregar.' },
+  { id: 'corpus', label: 'Corpus', tool: 'seeds/norms.csv + PDF', brief: 'Parquet con metadatos: norma, emisor, publicación, vigencia, estado, sha256.' },
+  { id: 'extract', label: 'Ingesta', tool: 'pymupdf', brief: 'Texto por página con offsets estables; OCR solo si la página es imagen.' },
+  { id: 'chunks', label: 'Chunks', tool: 'regex de estructura', brief: 'Un chunk por artículo con versión, vigencia, página y cita; sin solape.' },
+  { id: 'entities', label: 'Entidades', tool: 'regex + GLiNER2 large', brief: 'Norma, artículo, plazo, monto y % por regex; rol, producto y sanción con GLiNER2.' },
+  { id: 'embed', label: 'Embeddings', tool: 'embeddinggemma-300m + BM25', brief: 'Un vector por chunk en LanceDB más índice léxico en español.' },
+  { id: 'graph', label: 'Grafo', tool: 'FalkorDB + PageRank', brief: 'NEXT, REFERS_TO, SHARES_ENTITY, SIMILAR, MENTIONS, MODIFIES; PPR en memoria.' },
+  { id: 'conflicts', label: 'Conflictos', tool: 'reglas + xlm-roberta-large-xnli', brief: 'Política contra norma: regla si hay valores, NLI si no; una persona confirma.' },
+  { id: 'retrieve', label: 'Recuperación', tool: 'denso + BM25 + PPR', brief: 'Pregunta y fecha → 8 chunks con cita; lo no vigente pasa a historia.' },
+  { id: 'answer', label: 'Respuesta', tool: 'OpenAI + verificador', brief: 'Una cita por afirmación; el código verifica; persona aprueba si hay riesgo.' },
 ];
+
+const NW = 400, NH = 92, GAP = 28, X0 = 60, TOP = 6, WRAP = 52;
 
 @Component({
   selector: 'app-flow',
@@ -27,6 +25,38 @@ const STEPS: Step[] = [
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Flow {
-  readonly steps = STEPS;
-  readonly selected = signal<Step>(STEPS[0]);
+  readonly height = TOP + STEPS.length * NH + (STEPS.length - 1) * GAP + 8;
+  private readonly svgRef = viewChild.required<ElementRef<SVGSVGElement>>('svg');
+
+  constructor() { afterNextRender(() => this.draw()); }
+
+  private wrap(text: string, width: number): string[] {
+    const out: string[] = []; let cur = '';
+    for (const w of text.split(' ')) { if ((cur + ' ' + w).trim().length > width && cur) { out.push(cur); cur = w; } else { cur = (cur + ' ' + w).trim(); } }
+    if (cur) { out.push(cur); }
+    return out.slice(0, 2);
+  }
+
+  private draw(): void {
+    const svg = d3.select(this.svgRef().nativeElement);
+    svg.selectAll('*').remove();
+    const y = (i: number) => TOP + i * (NH + GAP);
+    svg.append('defs').append('marker').attr('id', 'arrow').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5).attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto')
+      .append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', '#a1a1a6');
+
+    svg.append('g').selectAll('line').data(STEPS.slice(1)).join('line')
+      .attr('x1', X0 + NW / 2).attr('x2', X0 + NW / 2).attr('y1', (_s, i) => y(i) + NH).attr('y2', (_s, i) => y(i) + NH)
+      .attr('stroke', '#a1a1a6').attr('stroke-width', 1.5).attr('marker-end', 'url(#arrow)')
+      .transition().duration(360).delay((_s, i) => 80 * i + 180).ease(d3.easeCubicOut).attr('y2', (_s, i) => y(i + 1) - 2);
+
+    const node = svg.append('g').selectAll('g').data(STEPS).join('g')
+      .attr('class', 'node').attr('transform', (_s, i) => `translate(${X0},${y(i)})`).attr('opacity', 0);
+    node.transition().duration(400).delay((_s, i) => 80 * i).attr('opacity', 1);
+    node.append('rect').attr('class', 'box').attr('width', NW).attr('height', NH).attr('rx', 18).attr('fill', '#fff').attr('stroke', 'rgba(0,0,0,0.08)');
+    node.append('text').attr('class', 'num').attr('x', 22).attr('y', 30).attr('fill', '#a1a1a6').text((_s, i) => String(i + 1).padStart(2, '0'));
+    node.append('text').attr('class', 'title').attr('x', 50).attr('y', 30).text(s => s.label);
+    node.append('text').attr('class', 'tool').attr('x', NW - 22).attr('y', 30).attr('text-anchor', 'end').attr('fill', '#86868b').text(s => s.tool);
+    node.append('text').attr('class', 'brief').attr('x', 50).attr('y', 54).attr('fill', '#515154')
+      .each((s, i, els) => { const lines = this.wrap(s.brief, WRAP); d3.select(els[i]).selectAll('tspan').data(lines).join('tspan').attr('x', 50).attr('dy', (_l, j) => j === 0 ? 0 : 17).text(l => l); });
+  }
 }
