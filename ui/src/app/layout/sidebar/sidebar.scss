@@ -1,0 +1,77 @@
+// Sidebar colapsado (72px) que se expande al pasar el mouse (250px); en movil siempre expandido.
+:host { display: block; height: 100%; --dur: 360ms; --ease: cubic-bezier(0.4, 0, 0.2, 1); --label-fade: 200ms;
+  --nav-xpad: 6px; --item-xpad: 12px; --brand-icon-size: 40px; --avatar-size: 36px; min-height: 0; }
+
+.brand-text, .nav-item span, .user-info {
+  max-width: 0; overflow: hidden; opacity: 0; visibility: hidden; white-space: nowrap;
+  transition: max-width var(--dur) var(--ease), opacity var(--dur) var(--ease), visibility 0s linear var(--dur);
+}
+.nav-label { max-height: 0; overflow: hidden; padding: 0; margin: 0; opacity: 0; visibility: hidden; white-space: nowrap;
+  transition: max-height var(--dur) var(--ease), padding var(--dur) var(--ease), opacity var(--label-fade) var(--ease), visibility 0s linear var(--label-fade); }
+
+.sidebar:hover .brand-text, .sidebar:hover .nav-item span, .sidebar:hover .user-info {
+  max-width: 260px; opacity: 1; visibility: visible;
+  transition: max-width var(--dur) var(--ease), opacity var(--dur) var(--ease), visibility 0s;
+}
+.sidebar:hover .nav-label { max-height: 40px; padding: 6px var(--item-xpad); opacity: 1; visibility: visible;
+  transition: max-height var(--dur) var(--ease), padding var(--dur) var(--ease), opacity var(--label-fade) var(--ease), visibility 0s; }
+
+.sidebar {
+  width: var(--sidebar-collapsed-width); height: 100%; background: var(--sidebar-bg); border-right: 1px solid var(--border-light);
+  display: flex; flex-direction: column; position: relative; transition: width var(--dur) var(--ease);
+  @media (max-width: 1023px) {
+    width: var(--sidebar-width);
+    .brand-text, .nav-item span, .user-info { max-width: 260px; opacity: 1; visibility: visible; }
+    .nav-label { max-height: 40px; padding: 6px var(--item-xpad); opacity: 1; visibility: visible; }
+    .nav-item { width: auto; margin: 2px 0; padding: 0 var(--item-xpad); gap: 12px; }
+    .user-profile { padding: 8px var(--item-xpad); gap: 12px; }
+    .sidebar-header { padding: 0 14px; }
+    .brand { gap: 12px; }
+    .nav-section + .nav-section { margin-top: 8px; padding-top: 8px; }
+  }
+  @media (min-width: 1024px) { &:hover { width: var(--sidebar-width); } }
+}
+
+.sidebar-header {
+  height: var(--topbar-height); display: flex; align-items: center; flex-shrink: 0;
+  padding: 0 calc((var(--sidebar-collapsed-width) - var(--brand-icon-size)) / 2);
+  border-bottom: 1px solid var(--border-light); transition: padding var(--dur) var(--ease), background var(--transition-fast);
+  &:hover { background: var(--bg-secondary); }
+}
+.sidebar:hover .sidebar-header { padding: 0 14px; }
+.brand { display: flex; align-items: center; width: 100%; text-decoration: none; white-space: nowrap; gap: 0; transition: gap var(--dur) var(--ease); }
+.sidebar:hover .brand { gap: 12px; }
+.brand-icon { width: var(--brand-icon-size); height: var(--brand-icon-size); flex: 0 0 var(--brand-icon-size); border-radius: var(--radius-md);
+  background: var(--text-primary); color: var(--text-inverse); display: flex; align-items: center; justify-content: center; }
+.brand-title { font-size: var(--font-size-xl); font-weight: var(--font-weight-bold); letter-spacing: -0.04em; line-height: 1; color: var(--text-primary); }
+
+.nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px var(--nav-xpad);
+  &::-webkit-scrollbar { width: 6px; } &::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; } }
+.nav-section + .nav-section { margin-top: 0; padding-top: 0; transition: margin-top var(--dur) var(--ease), padding-top var(--dur) var(--ease); }
+.sidebar:hover .nav-section + .nav-section { margin-top: 8px; padding-top: 8px; }
+.nav-label { font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; color: var(--text-secondary); }
+
+.nav-item {
+  display: flex; align-items: center; justify-content: flex-start; width: 40px; height: 40px;
+  margin: 2px calc((var(--sidebar-collapsed-width) - 40px) / 2 - var(--nav-xpad)); border-radius: var(--radius-md);
+  color: var(--text-secondary); text-decoration: none; font-size: var(--font-size-base); padding: 0 10px; gap: 0;
+  transition: background var(--transition-layout), color var(--transition-layout), width var(--dur) var(--ease), margin var(--dur) var(--ease), padding var(--dur) var(--ease), gap var(--dur) var(--ease);
+  &:hover { background: var(--sidebar-item-hover); color: var(--text-primary); }
+  &:active { transform: scale(0.98); }
+  &.active { background: var(--sidebar-item-active-bg); color: var(--sidebar-item-active-text); font-weight: var(--font-weight-semibold); }
+}
+.sidebar:hover .nav-item { width: auto; margin: 2px 0; padding: 0 var(--item-xpad); gap: 12px; }
+
+.sidebar-footer { flex-shrink: 0; padding: 16px var(--nav-xpad) 8px; border-top: 1px solid var(--border-light); }
+.user-profile { display: flex; align-items: center; width: 100%; border-radius: var(--radius-md); gap: 0;
+  padding: 0 max(0px, calc((var(--sidebar-collapsed-width) - var(--avatar-size)) / 2 - var(--nav-xpad)));
+  transition: padding var(--dur) var(--ease), gap var(--dur) var(--ease), background var(--transition-layout);
+  &:hover { background: var(--sidebar-item-hover); } }
+.sidebar:hover .user-profile { padding: 8px var(--item-xpad); gap: 12px; }
+.avatar { width: var(--avatar-size); height: var(--avatar-size); flex: 0 0 var(--avatar-size); border-radius: var(--radius-full);
+  background: var(--bg-secondary); color: var(--text-primary); font-size: var(--font-size-sm); font-weight: var(--font-weight-semibold);
+  display: flex; align-items: center; justify-content: center; }
+.user-name { font-size: var(--font-size-base); font-weight: var(--font-weight-medium); color: var(--text-primary); }
+.user-role { font-size: var(--font-size-sm); color: var(--text-secondary); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

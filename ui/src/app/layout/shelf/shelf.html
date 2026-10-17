@@ -1,0 +1,52 @@
+@if (shelf.content(); as content) {
+  <div class="shelf-backdrop" (click)="shelf.close()" aria-hidden="true"></div>
+  <aside class="shelf" role="dialog" aria-label="Detalle del artículo">
+    <div class="shelf-header">
+      <div class="header-text">
+        <span class="header-kicker">Artículo</span>
+        <h2 class="header-title">{{ article()?.path ?? '…' }}</h2>
+        <p class="muted mono">{{ article()?.id }}</p>
+      </div>
+      <button class="close-btn" (click)="shelf.close()" aria-label="Cerrar"><app-icon name="x" size="sm" /></button>
+    </div>
+
+    @if (article(); as a) {
+      <div class="shelf-body">
+        <section>
+          <p class="section-label">Versiones</p>
+          <div class="version-list">
+            @for (v of versions(); track v.id) {
+              <button class="version" [class.active]="selected()?.id === v.id" (click)="selected.set(v)">
+                <span class="pill" [class.ok]="!v.valid_to" [class.danger]="!!v.valid_to">v{{ v.n }}</span>
+                <span class="version-label">{{ label(v) }}</span>
+                @if (v.changed_by) { <span class="muted mono">por {{ v.changed_by }}</span> }
+              </button>
+            }
+          </div>
+        </section>
+
+        @if (selected(); as v) {
+          <section>
+            <p class="section-label">Texto {{ v.valid_to ? 'histórico' : 'vigente' }}</p>
+            <p class="version-text">{{ v.text }}</p>
+          </section>
+        }
+
+        @if (a.entities.length) {
+          <section>
+            <p class="section-label">Entidades</p>
+            <div class="chips">@for (e of a.entities; track e) { <span class="pill">{{ e }}</span> }</div>
+          </section>
+        }
+        @if (a.refers_to.length) {
+          <section>
+            <p class="section-label">Remite a</p>
+            @for (r of a.refers_to; track r) {
+              <button class="btn btn-ghost btn-sm mono" (click)="shelf.openArticle(r)"><app-icon name="arrow-bend-up-right" size="sm" /> {{ r }}</button>
+            }
+          </section>
+        }
+      </div>
+    }
+  </aside>
+}

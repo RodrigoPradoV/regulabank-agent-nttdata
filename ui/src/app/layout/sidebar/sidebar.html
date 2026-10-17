@@ -1,0 +1,32 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <a class="brand" routerLink="/norms">
+      <div class="brand-icon"><app-icon name="bank" size="lg" weight="fill" /></div>
+      <div class="brand-text"><p class="brand-title">regulabank</p></div>
+    </a>
+  </div>
+
+  <nav class="nav">
+    @for (module of navigation; track module.label) {
+      <div class="nav-section">
+        <p class="nav-label">{{ module.label }}</p>
+        @for (item of module.items; track item.path) {
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="item.label">
+            <app-icon [name]="item.icon" size="md" />
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </div>
+    }
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile">
+      <div class="avatar">AC</div>
+      <div class="user-info">
+        <p class="user-name">Analista de Cumplimiento</p>
+        <p class="user-role">Demo · humano en el bucle</p>
+      </div>
+    </div>
+  </div>
+</aside>

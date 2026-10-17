@@ -1,0 +1,12 @@
+.stats { display: flex; gap: var(--spacing-lg); }
+.stat { display: flex; flex-direction: column; align-items: flex-end; }
+.stat-n { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); letter-spacing: -0.02em; line-height: 1; }
+.stat-l { font-size: var(--font-size-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+.toolbar { display: flex; gap: var(--spacing-md); align-items: center; margin-bottom: var(--spacing-md); flex-wrap: wrap; }
+.search { position: relative; flex: 1; min-width: 240px; app-icon { position: absolute; left: 12px; top: 12px; color: var(--text-tertiary); } .input { padding-left: 36px; } }
+.segmented { display: inline-flex; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 3px;
+  button { border: none; background: transparent; height: 32px; padding: 0 12px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); font-weight: var(--font-weight-medium);
+    &.active { background: var(--text-primary); color: var(--text-inverse); } } }
+.title { font-size: var(--font-size-sm); max-width: 420px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.empty { text-align: center; padding: var(--spacing-xl); }

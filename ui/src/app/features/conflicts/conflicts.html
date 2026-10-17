@@ -1,0 +1,40 @@
+<div class="page-header">
+  <div>
+    <p class="page-kicker">Normativa</p>
+    <h1 class="page-title">Conflictos política ↔ norma</h1>
+    <p class="page-subtitle">Candidatos de la cascada reglas → NLI → juez. Una persona confirma antes de que cuenten como hallazgo.</p>
+  </div>
+</div>
+
+<div class="list">
+  @for (c of items(); track c.id) {
+    <div class="card conflict" [class.done]="c.status !== 'pending_human'">
+      <div class="conflict-head">
+        <span class="pill" [class.danger]="c.relation === 'contradicts'" [class.info]="c.relation === 'stricter'">{{ relationLabel(c.relation) }}</span>
+        <span class="pill">{{ c.method }} · {{ c.score }}</span>
+        <span class="pill" [class.ok]="c.status === 'confirmed'" [class.warn]="c.status === 'pending_human'">{{ statusLabel(c.status) }}</span>
+        <span class="muted mono">{{ c.id }}</span>
+      </div>
+      <div class="pair">
+        <div class="side">
+          <p class="side-label">Política interna</p>
+          <p class="quote">«{{ c.policy_quote }}»</p>
+          <p class="muted">{{ c.policy_citation }}</p>
+        </div>
+        <div class="vs"><app-icon name="arrows-left-right" /></div>
+        <div class="side">
+          <p class="side-label">Norma</p>
+          <p class="quote">«{{ c.norm_quote }}»</p>
+          <p class="muted">{{ c.norm_citation }}</p>
+        </div>
+      </div>
+      <p class="reason">{{ c.reason }}</p>
+      @if (c.status === 'pending_human') {
+        <div class="actions">
+          <button class="btn btn-primary btn-sm" (click)="decide(c, 'accept')"><app-icon name="check" size="sm" /> Confirmar contradicción</button>
+          <button class="btn btn-secondary btn-sm" (click)="decide(c, 'reject')"><app-icon name="x" size="sm" /> Descartar</button>
+        </div>
+      }
+    </div>
+  } @empty { <p class="muted">Sin conflictos pendientes.</p> }
+</div>
