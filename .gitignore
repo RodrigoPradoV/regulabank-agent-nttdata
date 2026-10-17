@@ -7,3 +7,18 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .claude/
+
+# Corpus y artefactos locales reproducibles. Solo se versionan los metadatos de la captura.
+/fuentes_descargadas/**
+!/fuentes_descargadas/README.md
+!/fuentes_descargadas/manifest.json
+!/fuentes_descargadas/validacion_fuentes.csv
+/tmp/
+/.tmp/
+
+# Residuos de la estructura anterior del frontend.
+/ui/
+
+# Copias locales; los originales ya viven en docs/brief/.
+/docs/FD - BCP - Agente Normativa y Politicas Internas - Fixed Fee SOW.docx
+/docs/Fuentes.docx

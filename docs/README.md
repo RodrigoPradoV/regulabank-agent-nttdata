@@ -27,6 +27,7 @@ Un archivo por área. Se leen en orden la primera vez; después cada uno se cons
 | `10-evaluation.md` | Medición | golden, métricas, fingerprint, grade, autonomía |
 | `11-demo.md` | Hack | plan por sprint, qué mostrar, impacto, repo |
 | `12-infra.md` | Infraestructura | FalkorDB, LanceDB, entorno, proveedores LLM, costos |
+| `13-document-ingestion.md` | Ingesta | jerarquía documental, relaciones auditables, gates y uso de transformers |
 | `brief/` | Originales | `sow.md` / `sow.docx` y `sources.md` / `sources.docx` tal como llegaron |
 
 ## Principios que atraviesan todo

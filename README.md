@@ -14,6 +14,7 @@ detección de contradicciones política ↔ norma y humano en el bucle. Reto Ban
 | `docs/` | blueprint, un `.md` por área (empezar por `docs/README.md`) |
 | `infra/` | Docker: FalkorDB y Dockerfile del backend |
 | `data/` | gitignored: bronze, silver, releases, views, state |
+| `fuentes_descargadas/` | corpus local gitignored; solo se versionan manifiesto, validación y README |
 
 Nada cruza de carpeta hacia arriba: el frontend solo conoce los contratos de la API
 (`backend/regulabank/api/contracts.py`, espejados en `frontend/src/app/core/models.ts`); el backend no conoce al
@@ -89,6 +90,19 @@ Abrir http://localhost:4200. Rutas: `/norms` (Textos), `/norms/<id>` (detalle co
 ```bash
 docker-compose -f infra/compose.yaml run --rm app      # construye la imagen del backend y corre el smoke test
 ```
+
+### Descargar y estructurar las fuentes
+
+Los PDF no se guardan en Git. Se reconstruyen desde las URL oficiales y luego se genera la jerarquía para
+GraphRAG:
+
+```powershell
+.\backend\scripts\download_fuentes.ps1
+python .\backend\scripts\extract_document_graph.py
+```
+
+Los artefactos Parquet quedan en `data/graph_ingest_v0/`, también fuera de Git. La decisión de arquitectura y
+los gates de calidad están en `docs/13-document-ingestion.md`.
 
 ### Problemas frecuentes
 
