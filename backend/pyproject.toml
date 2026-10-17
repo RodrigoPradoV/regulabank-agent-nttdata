@@ -27,6 +27,7 @@ models = [
   "gliner2",
   "wtpsplit",
   "sentencepiece",
+  "scikit-learn>=1.3",
 ]
 dev = ["pytest>=8", "ruff>=0.6"]
 

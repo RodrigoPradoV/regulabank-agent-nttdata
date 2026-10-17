@@ -191,7 +191,23 @@ def main(argv: list[str] | None = None) -> int:
     b.add_argument("--norms", type=Path, default=None, help="seeds/norms.csv con la columna aliases")
     b.add_argument("--device", default=None, help="cuda | mps | cpu (por defecto el mejor disponible)")
     b.add_argument("--load", action="store_true", help="cargar FalkorDB")
+    c = sub.add_parser("conflicts-prepare", help="release -> nli_pairs.parquet (coseno + entidad compartida)")
+    c.add_argument("--release", type=Path, required=True)
+    c.add_argument("--top-fraction", type=float, default=1.0, help="fraccion de pares candidatos a juzgar (1 = todos)")
+    c.add_argument("--per-pair", type=int, default=2, help="pares de oraciones por par de chunks")
+    c.add_argument("--neighbors", type=int, default=10, help="vecinos de otra norma por chunk (como similar_k)")
+    c.add_argument("--sample", type=int, default=200, help="pares a etiquetar a mano, repartidos por cluster")
+    k = sub.add_parser("conflicts-collect", help="nli_scores.parquet del pod -> release/conflicts.parquet")
+    k.add_argument("--release", type=Path, required=True)
+    k.add_argument("--scores", type=Path, required=True)
     args = parser.parse_args(argv)
+    if args.cmd in ("conflicts-prepare", "conflicts-collect"):
+        from regulabank.graphs import conflicts as conflicts_mod  # noqa: PLC0415
+
+        out = (conflicts_mod.prepare(args.release, args.top_fraction, args.per_pair, args.neighbors, args.sample) if args.cmd == "conflicts-prepare"
+               else conflicts_mod.collect(args.release, args.scores))
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        return 0
     try:
         manifest = build(args.release, args.pod_out, args.no_gliner2, args.no_embed, args.embedder, args.lance_dir,
                          args.norms, args.load, args.device)

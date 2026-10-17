@@ -43,3 +43,25 @@ mentions_floor = 0.01
 model = "google/embeddinggemma-300m"
 fallback_model = "intfloat/multilingual-e5-small"
 batch_size = 32
+
+[retrieval]
+# docs/08-retrieval.md. Provisionales hasta calibrar con el golden; cada valor lleva su fuente.
+cand_k = 50          # source: docs/08 "candidates", listas de CAND_K = 50
+fused_k = 100        # source: docs/08 "fuse", FUSED_K = 100
+rrf_k = 60           # source: docs/08 "fuse", w/(60+rank)
+ppr_new = 30         # source: docs/08 "fuse2", PPR_NEW = 30
+ppr_seed_top = 10    # source: docs/08 "ppr", los 10 mejores de fuse con 1/rank
+per_norm = 3         # source: docs/08 "contracts", tope por norma
+top_k = 8            # source: docs/08 "contracts", TOP_K = 8
+quote_max_chars = 320   # source: docs/08 "Citas verificadas", ventana <= 320 caracteres
+stop_df_fraction = 0.05 # source: docs/08 "understand", palabra stop si df > 5 % del corpus
+ngram_max = 5           # source: docs/08 "understand", n-gramas de hasta 5 palabras
+dedup_chars = 300       # source: docs/08 "dedup", primeros 300 caracteres normalizados
+
+[retrieval.weights]
+# source: docs/08 "fuse", RRF ponderada
+dense = 1.0
+bm25 = 0.3
+entities = 0.3
+norm = 0.5
+ppr = 0.3            # source: docs/08 "fuse2"
