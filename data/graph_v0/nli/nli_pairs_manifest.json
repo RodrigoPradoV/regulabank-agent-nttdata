@@ -1,0 +1,12 @@
+{
+  "embed_model": "google/embeddinggemma-300m",
+  "chunk_pairs": 19558,
+  "sentence_pairs": 28915,
+  "chunks_covered": 2498,
+  "chunks": 2976,
+  "neighbors": 10,
+  "per_pair": 2,
+  "clusters": 5,
+  "cluster_noise": 21,
+  "label_sample": 200
+}

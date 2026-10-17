@@ -27,7 +27,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 MODEL = "joeddav/xlm-roberta-large-xnli"
-MAX_LENGTH = 256   # tokens por par (premisa + hipotesis); el modelo admite 512
+MAX_LENGTH = 512   # tope del modelo; con 256 se truncaba el 61 % de los pares (oraciones largas)
 SCHEMA = pa.schema([
     ("pair_id", pa.string()), ("p_contradiction", pa.float32()), ("p_neutral", pa.float32()),
     ("p_entailment", pa.float32()), ("label", pa.string()), ("error", pa.string()),
@@ -51,17 +51,17 @@ def pick_device(allow_cpu: bool) -> str:
 
 
 class Nli:
-    def __init__(self, device: str):
+    def __init__(self, device: str, model_name: str = MODEL):
         import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
         self.torch, self.device = torch, device
-        self.tok = AutoTokenizer.from_pretrained(MODEL)
-        self.model = AutoModelForSequenceClassification.from_pretrained(MODEL).to(device).eval()
+        self.tok = AutoTokenizer.from_pretrained(model_name)
+        self.model = AutoModelForSequenceClassification.from_pretrained(model_name).to(device).eval()
         self.labels = {int(i): l.lower() for i, l in self.model.config.id2label.items()}
         missing = {"contradiction", "neutral", "entailment"} - set(self.labels.values())
         if missing:
-            sys.exit(f"ABORT: {MODEL} no trae las etiquetas NLI esperadas; faltan {sorted(missing)}")
+            sys.exit(f"ABORT: {model_name} no trae las etiquetas NLI esperadas; faltan {sorted(missing)}")
 
     def predict(self, premises: list[str], hypotheses: list[str]) -> tuple[list[dict[str, float]], int]:
         enc = self.tok(premises, hypotheses, truncation=True, max_length=MAX_LENGTH, padding=True,
@@ -115,6 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--allow-cpu", action="store_true")
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--batch-size", type=int, default=32)
+    p.add_argument("--model", default=MODEL, help="solo para humo local con un modelo pequeno")
     args = p.parse_args(argv)
 
     pairs = read_pairs(args.pairs)
@@ -130,7 +131,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     device = pick_device(args.allow_cpu)
     t0 = time.perf_counter()
-    nli = Nli(device)
+    nli = Nli(device, args.model)
     load_s = time.perf_counter() - t0
     rows = pairs.to_pylist()
 
@@ -171,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     labels: dict[str, int] = {}
     for r in final:
         labels[r["label"]] = labels.get(r["label"], 0) + 1
-    manifest = {"model": MODEL, "max_length": MAX_LENGTH, "device": device, "pairs": n, "labels": labels,
+    manifest = {"model": args.model, "max_length": MAX_LENGTH, "device": device, "pairs": n, "labels": labels,
                 "errors": errors, "truncated_pairs": truncated, "seconds": round(time.perf_counter() - t0, 1),
                 "pairs_sha256": hashlib.sha256(args.pairs.read_bytes()).hexdigest()}
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

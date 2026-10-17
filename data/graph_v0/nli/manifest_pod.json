@@ -1,0 +1,15 @@
+{
+  "model": "joeddav/xlm-roberta-large-xnli",
+  "max_length": 512,
+  "device": "cuda",
+  "pairs": 28915,
+  "labels": {
+    "entailment": 2523,
+    "contradiction": 2073,
+    "neutral": 24319
+  },
+  "errors": 0,
+  "truncated_pairs": 2804,
+  "seconds": 271.9,
+  "pairs_sha256": "5cc4ba2fb2da4874dfbfa8e3ba234f08114494e88105f148405d7324e8495e42"
+}

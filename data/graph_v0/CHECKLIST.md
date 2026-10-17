@@ -17,3 +17,16 @@
 | Chunks sin ninguna mención | 57 | para revisar |
 | Calidad de `product` | sin revisar | 24.337 menciones y 1.263 entidades: es el 51 % de todo; abrir muestras antes de confiar |
 | NLI RoBERTa | pendiente | pares preparados, modelo sin correr; sale como tabla, no como aristas |
+
+## NLI (XLM-R large XNLI, RunPod RTX 4090, 272 s, 28.915 pares de oraciones, 0 errores)
+
+| Relación | Pares | % |
+|---|---|---|
+| neutral | 24.319 | 84,1 |
+| entailment | 2.523 | 8,7 |
+| contradiction | 2.073 | 7,2 |
+
+Sin validar. Con p ≥ 0,9 hay 916 contradicciones y con p ≥ 0,99 hay 278. Las de mayor puntaje mezclan temas
+distintos («las OSFL no son sujetos obligados» contra cláusulas de debida diligencia), así que el 7,2 % está
+inflado. Se mide contra `nli/etiquetar_pares.csv` (200 pares repartidos por cluster HDBSCAN) antes de usarlo.
+Es una tabla (`nli/conflicts.parquet`), no aristas: el grafo conserva sus 4. 2.498 de 2.976 chunks tienen algún par.
