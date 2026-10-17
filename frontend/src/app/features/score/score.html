@@ -1,0 +1,22 @@
+<div class="page" data-area="all">
+  <div class="page-header">
+    <div>
+      <p class="page-kicker">Flujo</p>
+      <h1 class="page-title">De la pregunta a la respuesta</h1>
+    </div>
+  </div>
+  <div class="cols">
+    <section class="panel side">
+      <div class="panel-head"><h2 class="panel-title">Métricas</h2><span class="panel-caption muted">por consulta</span></div>
+      <div class="empty"><span>Aquí van recall, citas verificadas, abstención y costo por consulta.</span></div>
+    </section>
+    <section class="panel center">
+      <div class="panel-head"><h2 class="panel-title">Puntuación y respuesta</h2><span class="panel-caption muted">ocho pasos</span></div>
+      <app-flowchart [steps]="steps" />
+    </section>
+    <section class="panel side">
+      <div class="panel-head"><h2 class="panel-title">Agentes</h2><span class="panel-caption muted">quién decide</span></div>
+      <div class="empty"><span>Aquí va el grafo del auditor (LangGraph) cuando exista.</span></div>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,10 @@
+.viz { width: 100%; min-width: 0; }
+.pipeline { display: block; width: 100%; max-width: 560px; margin: 0 auto; height: auto; overflow: visible; font-family: var(--font-family); }
+// Los nodos los crea D3 fuera del alcance de Angular: las reglas van con ::ng-deep.
+:host ::ng-deep .pipeline {
+  text.phase { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; }
+  text.num { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; }
+  text.title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; fill: #1d1d1f; }
+  text.tool { font-size: 11.5px; font-weight: 500; letter-spacing: 0.01em; } text.brief { font-size: 13px; }
+  rect.box { filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.05)); transition: filter var(--transition-fast); } g.node:hover rect.box { filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.10)); }
+}
