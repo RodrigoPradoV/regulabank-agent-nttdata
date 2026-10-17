@@ -26,6 +26,9 @@ cargar la norma faltante). Un `MODIFIES` sin texto de reemplazo detectable produ
 
 ## B. Relaciones entre chunks → `focus`
 
+Decisión 2026-10-17: DISRPT y ARI quedan fuera (demasiado que validar; las normas obligan, no argumentan). Entre
+chunks solo hay estructura, referencias por regex, entidad compartida y similitud por embedding.
+
 | Arista | Cómo | Para qué |
 |---|---|---|
 | `NEXT` | orden dentro del artículo y entre artículos consecutivos | contexto y PageRank |
@@ -43,7 +46,7 @@ lo caro, y la decisión final es de una persona.
 1. candidatos   pares (policy_chunk, norm_chunk) por híbrido: coseno (gemma) + léxico (TF-IDF) + entidad compartida
                 (IDF alto: mismo plazo, mismo producto, misma definición); señales a percentil y combinadas con pesos
                 declarados en seeds/params.toml; K pares por chunk de política, nunca dentro de la misma norma
-2. nli          MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7 sobre (premise=norm, hypothesis=policy)
+2. nli          joeddav/xlm-roberta-large-xnli (RoBERTa large NLI con español) sobre (premise=norm, hypothesis=policy)
                 → entailment / neutral / contradiction con score; también sobre numerales alineados (plazo vs plazo)
 3. rules        comparación estructurada cuando ambas tienen valor: plazo_policy > plazo_norm → contradiction
                 (determinista y explicable: «la política da 20 días; la norma exige 15»)

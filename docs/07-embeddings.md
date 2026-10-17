@@ -14,7 +14,7 @@ re-mide en el golden de este corpus antes de fijarla.
 | Segmentación de oraciones | SaT `sat-3l-sm` (wtpsplit) + 2 reglas | | 52/60 fronteras correctas vs spaCy 40 y regex 30 | citas por oración |
 | NER abierto | `fastino/gliner2-large-v1` | | etiquetas propias sin entrenar | `04-entities.md` |
 | NER clásico | `MMG/xlm-roberta-large-ner-spanish`, BETO NER | | voto | `04-entities.md` |
-| NLI (contradicción) | `MoritzLaurer/mDeBERTa-v3-base-xnli-multilingual-nli-2mil7` | | multilingüe, 3 clases; candidatos de contradicción política ↔ norma | 50 pares etiquetados |
+| NLI (contradicción) | `joeddav/xlm-roberta-large-xnli` | | RoBERTa large NLI con español (XNLI), 3 clases; único modelo de relación entre textos, decisión 2026-10-17 | 50 pares etiquetados |
 | Temas (opcional) | UMAP + HDBSCAN sobre vectores; BERTopic solo pone palabras | | agrupar normas por tema para `REGULATES` | si hay tiempo |
 | LLM juez / redactor | Claude (Anthropic) o Azure OpenAI (stack de NTT DATA); proveedor abstraído con un `FakeProvider` guionado | | salida estructurada con Pydantic; el proveedor se elige por variable de entorno | siempre con modo mock |
 
