@@ -6,8 +6,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends build-essential
 COPY --from=ghcr.io/astral-sh/uv:0.9.5 /uv /usr/local/bin/uv
 
 WORKDIR /app
-COPY pyproject.toml README.md ./
-COPY src ./src
+COPY backend/pyproject.toml ./
+COPY backend/regulabank ./regulabank
+COPY backend/scripts ./scripts
 # Solo la base (grafo, vectores, api). Los modelos pesados van en el extra "models" y se instalan aparte.
 RUN uv pip install --system -e .
 

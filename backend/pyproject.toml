@@ -2,7 +2,6 @@
 name = "regulabank"
 version = "0.1.0"
 description = "GraphRAG de normativa bancaria y politicas internas con verificador y humano en el bucle"
-readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
   "falkordb>=1.0",
@@ -35,7 +34,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+include = ["regulabank*"]
 
 [tool.ruff]
 line-length = 110

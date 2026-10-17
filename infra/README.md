@@ -15,7 +15,7 @@ docker-compose -f infra/compose.yaml run --rm app         # construye la imagen 
 Sin Docker para la app (solo FalkorDB en contenedor):
 
 ```bash
-uv venv && uv pip install -e ".[dev]"
+cd backend && uv venv && uv pip install -e ".[dev]"
 uv run python scripts/smoke.py
 ```
 
@@ -23,4 +23,4 @@ Los modelos (embeddings, GLiNER2, NLI) se instalan aparte: `uv pip install -e ".
 
 ## Variables
 
-Copiar `.env.example` a `.env`. Se leen en un solo lugar: `src/regulabank/shared/config.py`.
+Copiar `.env.example` a `.env`. Se leen en un solo lugar: `backend/regulabank/shared/config.py`.

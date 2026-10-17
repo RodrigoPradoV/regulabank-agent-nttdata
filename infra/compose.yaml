@@ -41,7 +41,8 @@ services:
       MODEL_PROVIDER: mock
       HF_HOME: /app/data/hf
     volumes:
-      - ..:/app
+      - ../backend:/app
+      - ../data:/app/data
     working_dir: /app
     command: ["python", "scripts/smoke.py"]
 

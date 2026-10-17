@@ -49,18 +49,23 @@ hasta el sprint 3.
 ## Estructura del repo
 
 ```
-src/regulabank/
-  corpus/      capture, parse, chunks, versions, release        (02, 03)
-  graphs/      horizon, lens, focus, bridge, load, ppr          (04, 05, 06)
-  search/      embed, index, retrieve, rank, verify, quotes     (07, 08)
-  agents/      answer_graph, conflict_graph, onboard_graph, tools, providers, budget, ledger  (09)
-  eval/        golden, metrics, judge, fingerprint              (10)
-  api/         FastAPI: /search, /answer, /history, /conflicts, /approve, /ledger
-seeds/         norms.csv, norm_kinds.csv, entity_types.csv, catalog.csv, risk_rules.csv, questions.csv, params.toml
-data/          (gitignored) bronze/ silver/ releases/ views/ state/
-docs/          estos archivos
-tests/         funciones sin grafo; grafo con juez falso; golden de regresión
-ui/            demo
+backend/
+  regulabank/
+    corpus/      capture, parse, chunks, versions, release        (02, 03)
+    graphs/      horizon, lens, focus, bridge, load, ppr          (04, 05, 06)
+    search/      embed, index, retrieve, rank, verify, quotes     (07, 08)
+    agents/      answer_graph, conflict_graph, onboard_graph, tools, providers, budget, ledger  (09)
+    eval/        golden, metrics, judge, fingerprint              (10)
+    api/         FastAPI: /norms, /articles, /answer, /conflicts, /ledger
+    shared/      config, stores, contracts
+  seeds/         norms.csv, norm_kinds.csv, entity_types.csv, catalog.csv, risk_rules.csv, questions.csv, params.toml
+  scripts/       smoke.py, golden_retrieval.py
+  tests/         funciones sin grafo; grafo con juez falso; golden de regresión
+frontend/        Angular (sidebar, topbar, shelf; Textos, Conflictos, Consulta)
+charter/         comportamiento de los LLMs: principios, prompts versionados, herramientas, riesgo
+infra/           compose.yaml, Dockerfile
+docs/            estos archivos
+data/            (gitignored) bronze/ silver/ releases/ views/ state/
 ```
 
 Modo mock sin claves, diagrama del grafo, tabla «quién decide en cada nodo» y benchmark contra baseline en el
