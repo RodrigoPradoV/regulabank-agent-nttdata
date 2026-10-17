@@ -63,7 +63,7 @@ class Provider(Protocol):
     def complete(self, system: str, user: str, prompt_version: str) -> Reply: ...
 
     def chat(self, messages: list[dict], tools: list[dict] | None, prompt_version: str, model: str | None = None,
-             tool_choice: Any = None) -> ChatReply: ...
+             tool_choice: Any = None, effort: str | None = None) -> ChatReply: ...
 
     def models(self) -> list[str]: ...
 
@@ -128,9 +128,10 @@ class OpenAIProvider:
         return self._available
 
     def chat(self, messages: list[dict], tools: list[dict] | None, prompt_version: str, model: str | None = None,
-             tool_choice: Any = None) -> ChatReply:
+             tool_choice: Any = None, effort: str | None = None) -> ChatReply:
         model = model or self.model
-        key = hashlib.sha256(json.dumps([model, self.reasoning_effort, messages, tools, tool_choice, prompt_version],
+        effort = effort or self.reasoning_effort      # «minimal» para generaciones cortas (preguntas sugeridas): sin razonamiento, rapido
+        key = hashlib.sha256(json.dumps([model, effort, messages, tools, tool_choice, prompt_version],
                                         ensure_ascii=False, sort_keys=True).encode()).hexdigest()
         path = self.cache_dir / f"chat-{key}.json" if self.cache_dir else None
         if path and path.exists():
@@ -141,7 +142,7 @@ class OpenAIProvider:
             if tool_choice:
                 body["tool_choice"] = tool_choice
         if model.startswith("gpt-5"):
-            body["reasoning_effort"] = self.reasoning_effort
+            body["reasoning_effort"] = effort
         t0 = time.perf_counter()
         r = self.http.post("/chat/completions", json=body)
         if r.status_code != 200:
@@ -172,7 +173,7 @@ class FakeProvider:
         return ["fake-mini", "fake-strong"]
 
     def chat(self, messages: list[dict], tools: list[dict] | None, prompt_version: str, model: str | None = None,
-             tool_choice: Any = None) -> ChatReply:
+             tool_choice: Any = None, effort: str | None = None) -> ChatReply:
         self.calls.append((model or "fake", json.dumps(messages[-1], ensure_ascii=False)))
         msg = self.script_msgs.pop(0) if self.script_msgs else {"role": "assistant", "content": "Según el pasaje [1]."}
         return ChatReply(message=msg, model=model or self.name)

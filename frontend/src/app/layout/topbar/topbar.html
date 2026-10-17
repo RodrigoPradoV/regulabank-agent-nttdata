@@ -9,7 +9,7 @@
     </div>
   </div>
   <div class="header-right">
-    <span class="pill info">mock provider</span>
+    @if (provider(); as p) { <span class="pill info">{{ p }}</span> }
     <button class="icon-button" aria-label="Actualizar" title="Actualizar" onclick="window.location.reload()"><app-icon name="arrow-clockwise" /></button>
     <button class="icon-button" aria-label="Ayuda" title="Ayuda"><app-icon name="question" /></button>
   </div>

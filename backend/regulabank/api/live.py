@@ -123,7 +123,8 @@ class Live:
         frag = "\n\n".join(f"[{r['citation']}]\n{' '.join(r['text'].split())[:420]}" for r in (rng.choice(by_norm[n]) for n in norms))
         try:
             reply = self.agent.provider.chat([{"role": "system", "content": STARTER_SYSTEM}, {"role": "user", "content": "Fragmentos:\n" + frag}],
-                                             None, PROMPT_VERSION + "-starter-" + str(rng.random()), model=self.agent.models[0])
+                                             None, PROMPT_VERSION + "-starter-" + str(rng.random()), model=self.agent.models[0],
+                                             effort="minimal")
             qs = parse_questions(reply.message.get("content") or "", "", limit=6)
         except Exception:  # noqa: BLE001 - sin modelo no hay sugerencias nuevas; se devuelven las guardadas
             qs = []

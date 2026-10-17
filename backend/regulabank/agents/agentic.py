@@ -485,7 +485,7 @@ class AgenticAgent:
         user = f"Pregunta: {s['question']}\nRespuesta: {s.get('summary', '')[:900]}\nNormas y artículos vistos: {seen}"
         try:
             reply = self.provider.chat([{"role": "system", "content": SUGGEST_SYSTEM}, {"role": "user", "content": user}], None,
-                                       PROMPT_VERSION + "-suggest", model=self.models[0])
+                                       PROMPT_VERSION + "-suggest", model=self.models[0], effort="minimal")
         except Exception:  # noqa: BLE001 - sugerir es opcional
             return {"follow_ups": [], "events": []}
         u = dict(s.get("usage", {}))
