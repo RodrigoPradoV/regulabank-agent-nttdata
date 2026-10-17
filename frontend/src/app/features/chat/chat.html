@@ -32,9 +32,9 @@
               <span class="muted mono">as_of {{ a.as_of }} · {{ a.trace.scenario }} · {{ a.trace.latency_ms }} ms · {{ a.trace.cost_usd }} USD</span>
             </div>
             <p class="answer-text">{{ a.summary }}</p>
-            @for (c of a.claims; track c.chunk_id) {
+            @for (c of a.claims; track c.chunk_id; let i = $index) {
               <div class="claim">
-                <p class="quote">«{{ c.quote }}»</p>
+                <p class="quote"><b class="ref">[{{ i + 1 }}]</b> «{{ c.quote }}»</p>
                 <div class="claim-foot">
                   <button class="cite" (click)="shelf.openArticle(c.article_id)"><app-icon name="bookmark-simple" size="xs" /> {{ c.citation }}</button>
                   <span class="pill" [class.ok]="c.verified" [class.danger]="!c.verified">{{ c.verified ? 'cita verificada' : 'cita no verificada' }}</span>

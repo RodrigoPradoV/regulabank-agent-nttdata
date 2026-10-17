@@ -1,0 +1,9 @@
+scenario,strategy
+crossref,dense_valid
+definition,dense_valid
+impact,dense_valid
+lookup,dense_valid
+policy_vs_norm,dense_valid
+procedure,dense_valid
+threshold,dense_valid
+validity,dense_valid

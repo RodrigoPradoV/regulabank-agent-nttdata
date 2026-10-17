@@ -18,3 +18,6 @@
 .hitl { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-md); padding: var(--spacing-sm) var(--spacing-md); border-radius: var(--radius-md);
   background: var(--status-pending-bg); color: var(--text-primary); font-size: var(--font-size-sm); flex-wrap: wrap; }
 .composer { display: flex; gap: var(--spacing-sm); padding-top: var(--spacing-md); border-top: 1px solid var(--border-light); }
+
+.ref { font-weight: var(--font-weight-semibold); color: var(--text-secondary); margin-right: 6px; }
+.answer-text { white-space: pre-line; }

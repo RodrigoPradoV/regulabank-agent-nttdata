@@ -1,11 +1,12 @@
 // Espejo de src/regulabank/api/contracts.py (schema_version 0.1.0).
-export type NormKind = 'law' | 'sbs_resolution' | 'sbs_circular' | 'bcrp_circular' | 'internal_policy';
+export type NormKind = 'law' | 'legislative_decree' | 'supreme_decree' | 'sbs_resolution' | 'sbs_circular' | 'bcrp_circular' | 'internal_policy'
+  | 'international_standard' | 'international_guideline' | 'eu_regulation' | 'standard';
 export type RiskLevel = 'auto' | 'notify' | 'approve';
 export type AnswerStatus = 'ok' | 'abstained' | 'rejected' | 'pending_human';
 
 export interface NormSummary {
   id: string; short: string; title: string; kind: NormKind; issuer: string; published: string;
-  status: 'in_force' | 'repealed' | 'partial'; n_articles: number; topics: string[];
+  status: 'in_force' | 'repealed' | 'partial' | 'scheduled'; n_articles: number; topics: string[];
 }
 export interface Version {
   id: string; n: number; valid_from: string; valid_to: string | null;
@@ -42,7 +43,9 @@ export interface Conflict {
 export interface Decision { action: 'accept' | 'edit' | 'reject'; note?: string | null; }
 
 export const NORM_KIND_LABEL: Record<NormKind, string> = {
-  law: 'Ley', sbs_resolution: 'Resolución SBS', sbs_circular: 'Circular SBS', bcrp_circular: 'Circular BCRP', internal_policy: 'Política interna',
+  law: 'Ley', legislative_decree: 'Decreto legislativo', supreme_decree: 'Decreto supremo', sbs_resolution: 'Resolución SBS',
+  sbs_circular: 'Circular SBS', bcrp_circular: 'Circular BCRP', internal_policy: 'Política interna', international_standard: 'Estándar internacional',
+  international_guideline: 'Guía internacional', eu_regulation: 'Reglamento UE', standard: 'Estándar',
 };
 
 // Flujo (espejo de backend/regulabank/api/pipeline.py)

@@ -8,7 +8,7 @@
     <div class="meta">
       <span class="pill">{{ n.issuer }}</span>
       <span class="pill mono">{{ n.published }}</span>
-      <span class="pill" [class.ok]="n.status === 'in_force'" [class.warn]="n.status === 'partial'">{{ n.status === 'in_force' ? 'Vigente' : n.status === 'partial' ? 'Modificada' : 'Derogada' }}</span>
+      <span class="pill" [class.ok]="n.status === 'in_force'" [class.warn]="n.status === 'partial' || n.status === 'scheduled'">{{ n.status === 'in_force' ? 'Vigente' : n.status === 'partial' ? 'Modificada' : n.status === 'scheduled' ? 'Futura' : 'Derogada' }}</span>
     </div>
   </div>
 

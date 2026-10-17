@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field
 
 SCHEMA_VERSION = "0.1.0"
 
-NormKind = Literal["law", "sbs_resolution", "sbs_circular", "bcrp_circular", "internal_policy"]
+NormKind = Literal["law", "legislative_decree", "supreme_decree", "sbs_resolution", "sbs_circular", "bcrp_circular",
+                   "internal_policy", "international_standard", "international_guideline", "eu_regulation", "standard"]
 RiskLevel = Literal["auto", "notify", "approve"]
 AnswerStatus = Literal["ok", "abstained", "rejected", "pending_human"]
 
@@ -20,7 +21,7 @@ class NormSummary(BaseModel):
     kind: NormKind
     issuer: str
     published: str
-    status: Literal["in_force", "repealed", "partial"]
+    status: Literal["in_force", "repealed", "partial", "scheduled"]
     n_articles: int
     topics: list[str] = Field(default_factory=list)
 

@@ -51,7 +51,7 @@ fused_k = 100        # source: docs/08 "fuse", FUSED_K = 100
 rrf_k = 60           # source: docs/08 "fuse", w/(60+rank)
 ppr_new = 30         # source: docs/08 "fuse2", PPR_NEW = 30
 ppr_seed_top = 10    # source: docs/08 "ppr", los 10 mejores de fuse con 1/rank
-per_norm = 3         # source: docs/08 "contracts", tope por norma
+per_norm = 8         # sin tope (= top_k). Medido 2026-10-17 en el golden de desarrollo: tope 3 baja nDCG@8 de 0,563 a 0,531 (docs/08 proponia 3, de otro corpus)
 top_k = 8            # source: docs/08 "contracts", TOP_K = 8
 quote_max_chars = 320   # source: docs/08 "Citas verificadas", ventana <= 320 caracteres
 stop_df_fraction = 0.05 # source: docs/08 "understand", palabra stop si df > 5 % del corpus
@@ -65,3 +65,9 @@ bm25 = 0.3
 entities = 0.3
 norm = 0.5
 ppr = 0.3            # source: docs/08 "fuse2"
+hop = 0.3            # source: igual que ppr; el salto por citas solo entra con strategy = hybrid_hop y se mide contra hybrid
+
+[grade]
+# source: docs/08 "Abstencion": percentil 5 de mean6 sobre las positivas de DESARROLLO del golden (23 preguntas); el reservado no entra.
+# En todo el golden: abstiene 5 de 6 negativas y 3 de 34 positivas. Recalibrar al cambiar corpus o embedding.
+mean6_floor = 0.5037

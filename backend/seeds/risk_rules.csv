@@ -1,0 +1,10 @@
+scenario,level,reason
+policy_vs_norm,approve,una contradiccion politica-norma la confirma una persona (docs/09)
+impact,approve,el impacto de una derogacion lo revisa una persona
+threshold,notify,responde con una cifra: se avisa
+validity,notify,depende de la fecha: se avisa
+lookup,auto,
+definition,auto,
+procedure,auto,
+crossref,auto,
+negative,auto,

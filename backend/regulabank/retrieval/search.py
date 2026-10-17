@@ -140,9 +140,17 @@ class Retriever:
                 df[w] += 1
         self.stop = {w for w, c in df.items() if c / n > float(self.p["stop_df_fraction"])}
         self.refers: dict[str, list[str]] = defaultdict(list)
+        self.by_article: dict[str, list[str]] = defaultdict(list)
+        for cid, row in self.rows.items():
+            self.by_article[row["article_id"]].append(cid)
+        self.referrers: dict[str, list[str]] = defaultdict(list)   # article_id -> chunks que lo citan
         for e in self.edges.to_pylist():
             if e["type"] == "REFERS_TO":
                 self.refers[e["src"]].append(e["dst"])
+                if e["dst_kind"] == "article":
+                    self.referrers[e["dst"]].append(e["src"])
+        self._history: dict[str, list[HistoryItem]] = {}
+        self.dedup_per_norm = True   # un texto repetido en OTRA norma (la politica que copia a la norma) no se descarta
         self.params_hash = hashlib.sha256(json.dumps(self.p, sort_keys=True, default=str).encode()).hexdigest()[:12]
 
     # ---- read / understand -------------------------------------------------------------------------------
@@ -202,6 +210,15 @@ class Retriever:
                 score[cid] += w / (rrf + rank)
         return sorted(score.items(), key=lambda kv: -kv[1])[:limit]
 
+    def hop(self, chunk_ids: list[str], limit: int) -> list[str]:
+        """Salto por citas: los chunks de los articulos que citan los mejores y los chunks que citan a esos articulos."""
+        out: list[str] = []
+        for cid in chunk_ids:
+            for dst in self.refers.get(cid, []):
+                out.extend(self.by_article.get(dst, [])[:2])
+            out.extend(self.referrers.get(self.rows[cid]["article_id"], [])[:2])
+        return [c for c in dict.fromkeys(out) if c not in set(chunk_ids)][:limit]
+
     # ---- dedup / validity / contracts --------------------------------------------------------------------
     @staticmethod
     def _current(row: dict[str, Any], as_of: str) -> bool:
@@ -209,12 +226,12 @@ class Retriever:
         return (not vf or vf <= as_of) and (not vt or as_of < vt)
 
     def dedup_validity(self, ranked: list[tuple[str, float]], as_of: str) -> tuple[list, int, int]:
-        seen_text: set[str] = set()
+        seen_text: set = set()
         kept: list[tuple[str, float]] = []
         dropped = 0
         n = int(self.p["dedup_chars"])
         for cid, s in ranked:
-            key = _norm_text(self.rows[cid]["text"])[:n]
+            key = (self.rows[cid]["norm_id"] if self.dedup_per_norm else "", _norm_text(self.rows[cid]["text"])[:n])
             if key in seen_text:
                 dropped += 1
                 continue
@@ -273,9 +290,12 @@ class Retriever:
         return f"«{quote}» {{{tail}}}"
 
     # ---- principal ---------------------------------------------------------------------------------------
-    def search(self, question: str, as_of: str | None = None) -> Result:
+    def search(self, question: str, as_of: str | None = None, strategy: str = "hybrid", quotes: bool = True) -> Result:
+        """strategy: dense (baseline: solo coseno), dense_valid (denso + dedup + vigencia), hybrid (docs/08) o hybrid_hop."""
         t: dict[str, float] = {}
         t0 = time.perf_counter()
+        self._history = {}
+        self._quotes = quotes
 
         def lap(name: str) -> None:
             nonlocal t0
@@ -291,9 +311,17 @@ class Retriever:
         lap("embed")
         weights = self.params["retrieval"]["weights"]
         lists = self.candidates(question, qvec, anchors, norms)
+        if strategy in ("dense", "dense_valid"):
+            lists = {"dense": lists["dense"]}
         lap("candidates")
         fused = self.fuse(lists, weights, int(self.p["fused_k"]))
         lap("fuse")
+        if strategy == "dense":
+            top = [(c, s) for c, s in fused[:int(self.p["top_k"])]]
+            return self._finish(question, qvec, as_of, norms, anchors, lists, fused, [], 0, 0, top, t)
+        if strategy == "dense_valid":   # denso + dedup + vigencia a as_of, sin PageRank ni listas extra
+            ranked, dropped, moved = self.dedup_validity(fused, as_of)
+            return self._finish(question, qvec, as_of, norms, anchors, lists, fused, [], dropped, moved, self.contracts(ranked), t)
         seeds = {e: max(self.idf.get(e, 0.0), 0.1) for e in anchors}
         for rank, (cid, _) in enumerate(fused[:int(self.p["ppr_seed_top"])], start=1):
             seeds[cid] = 1.0 / rank
@@ -304,15 +332,21 @@ class Retriever:
         in_fused = {c for c, _ in fused}
         new = [c for c in ppr_ids if c not in in_fused][:int(self.p["ppr_new"])]
         lists2 = {**lists, "ppr": ppr_ids}
+        if strategy == "hybrid_hop":
+            lists2["hop"] = self.hop([c for c, _ in self.fuse(lists2, weights, 5)], int(self.p["cand_k"]))
         fused2 = self.fuse(lists2, weights, int(self.p["fused_k"]) + len(new))
         lap("fuse2")
         ranked, dropped, moved = self.dedup_validity(fused2, as_of)
         top = self.contracts(ranked)
         lap("dedup_validity_contracts")
+        return self._finish(question, qvec, as_of, norms, anchors, lists2, fused2, new, dropped, moved, top, t)
+
+    def _finish(self, question, qvec, as_of, norms, anchors, lists2, fused2, new, dropped, moved, top, t) -> Result:
+        self._t_cites = time.perf_counter()
         hits = []
         for cid, s in top:
             row = self.rows[cid]
-            quote = self.own_quote(qvec, row["text"])
+            quote = self.own_quote(qvec, row["text"]) if self._quotes else row["text"][:int(self.p["quote_max_chars"])].strip()
             ok = verify_quote(quote, row["text"])
             hits.append(Hit(
                 chunk_id=cid, norm_id=row["norm_id"], norm_short=row["norm_short"], article_no=row["article_no"],
@@ -322,7 +356,7 @@ class Retriever:
                 valid_from=row["valid_from"], valid_to=row["valid_to"], is_current=self._current(row, as_of),
                 history=self._history.get(cid, []), refers_to=self.refers.get(cid, []),
                 entities=sorted(self.entities_of.get(cid, []), key=lambda e: -self.idf.get(e, 0.0))[:8]))
-        lap("cites")
+        t["cites"] = round((time.perf_counter() - self._t_cites) * 1000, 1) if hasattr(self, "_t_cites") else 0.0
         dense = self.table.search(qvec.tolist()).metric("cosine").limit(6).to_list()
         mean6 = float(np.mean([1.0 - r["_distance"] for r in dense])) if dense else None
         trace = Trace(question, as_of, norms, anchors, lists2, [c for c, _ in fused2], new, dropped, moved, mean6, t,

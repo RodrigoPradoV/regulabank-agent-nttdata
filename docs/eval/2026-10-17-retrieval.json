@@ -1,0 +1,534 @@
+{
+  "n": {
+    "questions": 40,
+    "positive": 34,
+    "negative": 6,
+    "dev": 23,
+    "reserved": 11
+  },
+  "global": {
+    "dense": {
+      "dev": {
+        "r5": 0.739,
+        "r10": 0.783,
+        "mrr": 0.491,
+        "ndcg8": 0.563
+      },
+      "reserved": {
+        "r5": 0.818,
+        "r10": 0.909,
+        "mrr": 0.53,
+        "ndcg8": 0.623
+      },
+      "latency_ms": {
+        "p50": 70,
+        "p95": 81
+      }
+    },
+    "dense_valid": {
+      "dev": {
+        "r5": 0.739,
+        "r10": 0.783,
+        "mrr": 0.491,
+        "ndcg8": 0.563
+      },
+      "reserved": {
+        "r5": 0.818,
+        "r10": 0.909,
+        "mrr": 0.53,
+        "ndcg8": 0.623
+      },
+      "latency_ms": {
+        "p50": 59,
+        "p95": 76
+      }
+    },
+    "hybrid": {
+      "dev": {
+        "r5": 0.609,
+        "r10": 0.783,
+        "mrr": 0.369,
+        "ndcg8": 0.442
+      },
+      "reserved": {
+        "r5": 0.545,
+        "r10": 0.818,
+        "mrr": 0.408,
+        "ndcg8": 0.477
+      },
+      "latency_ms": {
+        "p50": 68,
+        "p95": 81
+      }
+    },
+    "hybrid_hop": {
+      "dev": {
+        "r5": 0.652,
+        "r10": 0.783,
+        "mrr": 0.397,
+        "ndcg8": 0.49
+      },
+      "reserved": {
+        "r5": 0.636,
+        "r10": 0.909,
+        "mrr": 0.481,
+        "ndcg8": 0.553
+      },
+      "latency_ms": {
+        "p50": 72,
+        "p95": 84
+      }
+    }
+  },
+  "vs_dense_ndcg8": {
+    "dense_valid_dev": {
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "dense_valid_reserved": {
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "hybrid_dev": {
+      "diff": -0.122,
+      "ci95": [
+        -0.208,
+        -0.046
+      ]
+    },
+    "hybrid_reserved": {
+      "diff": -0.145,
+      "ci95": [
+        -0.31,
+        -0.004
+      ]
+    },
+    "hybrid_hop_dev": {
+      "diff": -0.074,
+      "ci95": [
+        -0.158,
+        0.019
+      ]
+    },
+    "hybrid_hop_reserved": {
+      "diff": -0.07,
+      "ci95": [
+        -0.19,
+        0.006
+      ]
+    }
+  },
+  "by_scenario": {
+    "crossref": {
+      "n": 3,
+      "n_dev": 2,
+      "n_reserved": 1,
+      "dense": {
+        "ndcg8_dev": 0.25,
+        "ndcg8_reserved": 0.631,
+        "r5_all": 0.667
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.25,
+        "ndcg8_reserved": 0.631,
+        "r5_all": 0.667
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.0,
+        "ndcg8_reserved": 0.0,
+        "r5_all": 0.0
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.193,
+        "ndcg8_reserved": 0.0,
+        "r5_all": 0.333
+      }
+    },
+    "definition": {
+      "n": 5,
+      "n_dev": 3,
+      "n_reserved": 2,
+      "dense": {
+        "ndcg8_dev": 0.662,
+        "ndcg8_reserved": 0.715,
+        "r5_all": 0.8
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.662,
+        "ndcg8_reserved": 0.715,
+        "r5_all": 0.8
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.488,
+        "ndcg8_reserved": 0.75,
+        "r5_all": 0.8
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.687,
+        "ndcg8_reserved": 0.75,
+        "r5_all": 1.0
+      }
+    },
+    "impact": {
+      "n": 3,
+      "n_dev": 2,
+      "n_reserved": 1,
+      "dense": {
+        "ndcg8_dev": 0.0,
+        "ndcg8_reserved": 0.0,
+        "r5_all": 0.0
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.0,
+        "ndcg8_reserved": 0.0,
+        "r5_all": 0.0
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.0,
+        "ndcg8_reserved": 0.0,
+        "r5_all": 0.0
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.0,
+        "ndcg8_reserved": 0.0,
+        "r5_all": 0.0
+      }
+    },
+    "lookup": {
+      "n": 5,
+      "n_dev": 4,
+      "n_reserved": 1,
+      "dense": {
+        "ndcg8_dev": 0.565,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.8
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.565,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.8
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.533,
+        "ndcg8_reserved": 0.356,
+        "r5_all": 0.6
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.515,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.8
+      }
+    },
+    "policy_vs_norm": {
+      "n": 5,
+      "n_dev": 3,
+      "n_reserved": 2,
+      "dense": {
+        "ndcg8_dev": 0.687,
+        "ndcg8_reserved": 0.393,
+        "r5_all": 0.8
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.687,
+        "ndcg8_reserved": 0.393,
+        "r5_all": 0.8
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.5,
+        "ndcg8_reserved": 0.167,
+        "r5_all": 0.4
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.606,
+        "ndcg8_reserved": 0.324,
+        "r5_all": 0.6
+      }
+    },
+    "procedure": {
+      "n": 3,
+      "n_dev": 1,
+      "n_reserved": 2,
+      "dense": {
+        "ndcg8_dev": 1.0,
+        "ndcg8_reserved": 0.75,
+        "r5_all": 1.0
+      },
+      "dense_valid": {
+        "ndcg8_dev": 1.0,
+        "ndcg8_reserved": 0.75,
+        "r5_all": 1.0
+      },
+      "hybrid": {
+        "ndcg8_dev": 1.0,
+        "ndcg8_reserved": 0.715,
+        "r5_all": 1.0
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 1.0,
+        "ndcg8_reserved": 0.715,
+        "r5_all": 1.0
+      }
+    },
+    "threshold": {
+      "n": 6,
+      "n_dev": 5,
+      "n_reserved": 1,
+      "dense": {
+        "ndcg8_dev": 0.852,
+        "ndcg8_reserved": 0.5,
+        "r5_all": 1.0
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.852,
+        "ndcg8_reserved": 0.5,
+        "r5_all": 1.0
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.65,
+        "ndcg8_reserved": 0.631,
+        "r5_all": 0.833
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.65,
+        "ndcg8_reserved": 0.5,
+        "r5_all": 0.833
+      }
+    },
+    "validity": {
+      "n": 4,
+      "n_dev": 3,
+      "n_reserved": 1,
+      "dense": {
+        "ndcg8_dev": 0.296,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.75
+      },
+      "dense_valid": {
+        "ndcg8_dev": 0.296,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.75
+      },
+      "hybrid": {
+        "ndcg8_dev": 0.273,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.75
+      },
+      "hybrid_hop": {
+        "ndcg8_dev": 0.23,
+        "ndcg8_reserved": 1.0,
+        "r5_all": 0.25
+      }
+    }
+  },
+  "abstention": {
+    "auc_mean6": 0.8921568627450981,
+    "floor_p5_dev": 0.5037,
+    "negatives_abstained": "5/6",
+    "positives_wrongly_abstained": 3,
+    "precision": 0.625,
+    "recall": 0.833,
+    "mean6_positive": 0.577,
+    "mean6_negative": 0.45
+  },
+  "scenario_detection": {
+    "accuracy": 0.735,
+    "wrong": [
+      [
+        "q03",
+        "policy_vs_norm",
+        "threshold"
+      ],
+      [
+        "q06",
+        "policy_vs_norm",
+        "threshold"
+      ],
+      [
+        "q12",
+        "lookup",
+        "threshold"
+      ],
+      [
+        "q13",
+        "lookup",
+        "threshold"
+      ],
+      [
+        "q14",
+        "lookup",
+        "threshold"
+      ],
+      [
+        "q18",
+        "definition",
+        "validity"
+      ],
+      [
+        "q20",
+        "definition",
+        "validity"
+      ],
+      [
+        "q23",
+        "procedure",
+        "crossref"
+      ],
+      [
+        "q32",
+        "threshold",
+        "policy_vs_norm"
+      ]
+    ]
+  },
+  "route": {
+    "crossref": "dense_valid",
+    "definition": "dense_valid",
+    "impact": "dense_valid",
+    "lookup": "dense_valid",
+    "policy_vs_norm": "dense_valid",
+    "procedure": "dense_valid",
+    "threshold": "dense_valid",
+    "validity": "dense_valid"
+  },
+  "misses": {
+    "dense": [
+      [
+        "q02",
+        "crossref",
+        null
+      ],
+      [
+        "q05",
+        "validity",
+        null
+      ],
+      [
+        "q13",
+        "lookup",
+        null
+      ],
+      [
+        "q33",
+        "impact",
+        null
+      ],
+      [
+        "q34",
+        "impact",
+        null
+      ],
+      [
+        "q35",
+        "impact",
+        null
+      ]
+    ],
+    "dense_valid": [
+      [
+        "q02",
+        "crossref",
+        null
+      ],
+      [
+        "q05",
+        "validity",
+        null
+      ],
+      [
+        "q13",
+        "lookup",
+        null
+      ],
+      [
+        "q33",
+        "impact",
+        null
+      ],
+      [
+        "q34",
+        "impact",
+        null
+      ],
+      [
+        "q35",
+        "impact",
+        null
+      ]
+    ],
+    "hybrid": [
+      [
+        "q02",
+        "crossref",
+        null
+      ],
+      [
+        "q05",
+        "validity",
+        null
+      ],
+      [
+        "q13",
+        "lookup",
+        null
+      ],
+      [
+        "q27",
+        "crossref",
+        null
+      ],
+      [
+        "q33",
+        "impact",
+        null
+      ],
+      [
+        "q34",
+        "impact",
+        null
+      ],
+      [
+        "q35",
+        "impact",
+        null
+      ]
+    ],
+    "hybrid_hop": [
+      [
+        "q02",
+        "crossref",
+        null
+      ],
+      [
+        "q05",
+        "validity",
+        null
+      ],
+      [
+        "q13",
+        "lookup",
+        null
+      ],
+      [
+        "q33",
+        "impact",
+        null
+      ],
+      [
+        "q34",
+        "impact",
+        null
+      ],
+      [
+        "q35",
+        "impact",
+        null
+      ]
+    ]
+  }
+}

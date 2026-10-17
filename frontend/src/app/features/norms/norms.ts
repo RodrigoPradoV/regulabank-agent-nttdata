@@ -28,6 +28,6 @@ export class Norms {
     policy: this.all().filter(n => n.kind === 'internal_policy').length,
   }));
   open(n: NormSummary): void { this.router.navigate(['/norms', n.id]); }
-  statusClass(n: NormSummary): string { return n.status === 'in_force' ? 'ok' : n.status === 'partial' ? 'warn' : 'danger'; }
-  statusLabel(n: NormSummary): string { return n.status === 'in_force' ? 'Vigente' : n.status === 'partial' ? 'Modificada' : 'Derogada'; }
+  statusClass(n: NormSummary): string { return n.status === 'in_force' ? 'ok' : n.status === 'partial' || n.status === 'scheduled' ? 'warn' : 'danger'; }
+  statusLabel(n: NormSummary): string { return n.status === 'in_force' ? 'Vigente' : n.status === 'partial' ? 'Modificada' : n.status === 'scheduled' ? 'Futura' : 'Derogada'; }
 }

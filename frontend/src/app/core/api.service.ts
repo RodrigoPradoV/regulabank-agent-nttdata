@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Answer, AnswerRequest, Article, Conflict, Decision, NormDetail, NormSummary, Pipeline } from './models';
 
-export const API_URL = 'http://127.0.0.1:8010';
+// En desarrollo `ng serve` reenvia /api al API (proxy.conf.js; destino con API_TARGET, por defecto :8010).
+export const API_URL = '/api';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
