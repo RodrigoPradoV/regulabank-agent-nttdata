@@ -26,12 +26,13 @@ import pyarrow.parquet as pq
 from langgraph.graph import END, START, StateGraph
 
 from regulabank.agents.answer import MAX_FIXES, NO_EVIDENCE, check, compose, detect_scenario, load_risk, parse_as_of, strip_preamble
+from regulabank.agents import guard
 from regulabank.agents.llm import Provider
 from regulabank.graphs import embed as embed_mod
 from regulabank.retrieval.search import Hit, Retriever, verify_quote
 
 MAX_CALLS = 6
-PROMPT_VERSION = "agentic-v8"
+PROMPT_VERSION = "agentic-v10"
 CALLS_BY_COMPLEXITY = {1: 3, 2: 5, 3: 8}      # presupuesto de herramientas segun la complejidad que el agente se asigna
 READ_CLIP = 2400
 
@@ -110,6 +111,7 @@ class Toolbox:
         self.index: dict[str, int] = {}
         self.conflicts_by_chunk = conflicts or {}
         self.n_search = 0
+        self.evidence = 0.0          # mayor evidencia (promedio del coseno de los 6 mejores) entre todas las busquedas
         self.order = list(retriever.rows)
         self.pos = {c: i for i, c in enumerate(self.order)}
 
@@ -150,6 +152,7 @@ class Toolbox:
             self.r.p["top_k"] = old
         hits = [h for h in res.hits if norm_id is None or h.norm_id == norm_id][:k]
         self.n_search += 1
+        self.evidence = max(self.evidence, res.trace.evidence_mean6 or 0.0)
         briefs = [self.brief(h) for h in hits]
         scope = f" en {norm_id}" if norm_id else ""
         return ({"consulta": query, "resultados": briefs},
@@ -279,6 +282,11 @@ def narrate(ev: dict) -> str:
         return ev["summary"]
     if t == "model":
         return f"Cambio de {ev.get('from')} a {ev['to']}: {ev.get('reason', '')}."
+    if t == "distance":
+        return (f"La evidencia más cercana está a distancia {ev['distance']:.2f} de la pregunta (máximo permitido {ev['max_distance']:.2f}): "
+                "queda fuera de lo que cubre el corpus, así que me abstengo en vez de inventar.")
+    if t == "guard":
+        return f"No respondo esta pregunta ({ev['reason_es']}); no se llamó al modelo."
     if t == "suggest":
         return f"Propongo {len(ev['questions'])} preguntas para seguir."
     if t == "draft":
@@ -330,11 +338,24 @@ class AgenticAgent:
     risk_rules: dict[str, str] = field(default_factory=load_risk)
     conflicts: dict[str, list[dict]] = field(default_factory=dict)
     ledger_path: Path | None = None
+    evidence_floor: float | None = None     # distancia maxima = 1 - floor; sin umbral calibrado, la regla no actua
 
     def __post_init__(self) -> None:
         self.models = self.provider.models()          # de menor a mayor potencia
 
     # ---- nodos ---------------------------------------------------------------------------------------------
+    def guard(self, s: State) -> State:
+        """Integridad de la entrada: groserias, inyeccion de prompt, texto ilegible o demasiado largo no llegan al modelo."""
+        ok, reason = guard.check_question(s["question"])
+        if ok:
+            return {"events": []}
+        why = {"profanity": "lenguaje ofensivo", "injection": "intenta cambiar mis instrucciones", "unreadable": "no se entiende", "too_long": "demasiado larga"}[reason]
+        return {"status": "blocked", "risk": "auto", "claims": [], "summary": guard.REFUSAL[reason], "follow_ups": [],
+                "events": [{"type": "guard", "blocked": True, "reason": reason, "reason_es": why}]}
+
+    def after_guard(self, s: State) -> str:
+        return "ledger" if s.get("status") == "blocked" else "plan"
+
     def plan(self, s: State) -> State:
         """Primer paso obligatorio: el modelo se asigna una complejidad y una estrategia; la complejidad fija el presupuesto de
         herramientas y el modelo (3 = el potente desde el inicio). Corre con el modelo economico."""
@@ -410,11 +431,20 @@ class AgenticAgent:
 
     def verify(self, s: State) -> State:
         tb, text = s["tb"], s["text"]
+        floor = self.evidence_floor
+        if floor is not None and tb.n_search and tb.evidence < floor and not text.startswith(NO_EVIDENCE):
+            # Regla de distancia: si lo mas cercano que hay en el corpus esta mas lejos de la pregunta que el maximo calibrado, es fuera de contexto.
+            best = short(tb.hits[0], self.retriever.rows) if tb.hits else ""
+            msg = (f"{NO_EVIDENCE}: la pregunta queda fuera de lo que cubre el corpus." + (f" Lo más cercano es {best}, pero no la responde." if best else ""))
+            return {"text": msg, "faults": [], "events": [{"type": "distance", "evidence": round(tb.evidence, 4), "distance": round(1 - tb.evidence, 4),
+                                                              "max_distance": round(1 - floor, 4), "out_of_context": True}]}
         faults = check(text, tb.hits, s["scenario"], s["as_of"], s.get("usage", {}).get("finish_reason"))
         if tb.n_search == 0:
             faults.append({"kind": "no_search", "detail": "no usaste `search`: busca en el corpus antes de responder"})
         if not text.strip():
             faults.append({"kind": "empty", "detail": "respuesta vacía"})
+        if unsafe := guard.check_answer(text):
+            faults.append({"kind": "unsafe_output", "detail": unsafe + "; reescríbela sin eso"})
         return {"faults": faults, "events": [{"type": "verify", "ok": not faults, "attempt": s.get("fixes", 0) + 1,
                                               "faults": [f"{f['kind']}: {f['detail']}" for f in faults]}]}
 
@@ -485,9 +515,10 @@ class AgenticAgent:
 
     def graph(self):
         g = StateGraph(State)
-        for name in ("plan", "agent", "tools", "verify", "fix", "deliver", "suggest", "reject", "ledger"):
+        for name in ("guard", "plan", "agent", "tools", "verify", "fix", "deliver", "suggest", "reject", "ledger"):
             g.add_node(name, getattr(self, name))
-        g.add_edge(START, "plan")
+        g.add_edge(START, "guard")
+        g.add_conditional_edges("guard", self.after_guard, {"ledger": "ledger", "plan": "plan"})
         g.add_edge("plan", "agent")
         g.add_conditional_edges("agent", self.after_agent, {"tools": "tools", "verify": "verify"})
         g.add_edge("tools", "agent")

@@ -21,7 +21,7 @@ const SUGGESTIONS = [
 
 const ICON: Record<string, string> = {
   start: 'compass', plan: 'lightbulb', think: 'chat-circle-dots', model: 'lightning', draft: 'pencil-simple-line',
-  verify: 'shield-check', deliver: 'check-circle', suggest: 'sparkle', search: 'magnifying-glass', read: 'book-open-text', refers_to: 'link',
+  verify: 'shield-check', deliver: 'check-circle', suggest: 'sparkle', guard: 'shield-warning', search: 'magnifying-glass', read: 'book-open-text', refers_to: 'link',
   neighbors: 'arrows-out-line-horizontal', conflicts: 'warning', escalate: 'lightning',
 };
 
@@ -118,5 +118,5 @@ export class Chat {
   seconds(ms: number): string { return (ms / 1000).toFixed(1).replace('.', ',') + ' s'; }
   usd(x: number): string { return x < 0.01 ? x.toFixed(4).replace('.', ',') : x.toFixed(2).replace('.', ','); }
   models(a: Answer): string { return (a.trace.models?.length ? a.trace.models : [a.trace.model]).join(' → '); }
-  statusLabel(s: string): string { return ({ ok: 'Verificada', abstained: 'Sin sustento en el corpus', rejected: 'No verificada', pending_human: 'Pendiente de revisión' } as Record<string, string>)[s] ?? s; }
+  statusLabel(s: string): string { return ({ ok: 'Verificada', abstained: 'Sin sustento en el corpus', rejected: 'No verificada', pending_human: 'Pendiente de revisión', blocked: 'Pregunta no admitida' } as Record<string, string>)[s] ?? s; }
 }

@@ -11,7 +11,7 @@ SCHEMA_VERSION = "0.1.0"
 NormKind = Literal["law", "legislative_decree", "supreme_decree", "sbs_resolution", "sbs_circular", "bcrp_circular",
                    "internal_policy", "international_standard", "international_guideline", "eu_regulation", "standard"]
 RiskLevel = Literal["auto", "notify", "approve"]
-AnswerStatus = Literal["ok", "abstained", "rejected", "pending_human"]
+AnswerStatus = Literal["ok", "abstained", "rejected", "pending_human", "blocked"]
 
 
 class NormSummary(BaseModel):

@@ -2,7 +2,7 @@
 export type NormKind = 'law' | 'legislative_decree' | 'supreme_decree' | 'sbs_resolution' | 'sbs_circular' | 'bcrp_circular' | 'internal_policy'
   | 'international_standard' | 'international_guideline' | 'eu_regulation' | 'standard';
 export type RiskLevel = 'auto' | 'notify' | 'approve';
-export type AnswerStatus = 'ok' | 'abstained' | 'rejected' | 'pending_human';
+export type AnswerStatus = 'ok' | 'abstained' | 'rejected' | 'pending_human' | 'blocked';
 
 export interface NormSummary {
   id: string; short: string; title: string; kind: NormKind; issuer: string; published: string;
@@ -64,7 +64,7 @@ export const AREA_LABEL: Record<StageArea, string> = { corpus: 'Corpus', graph: 
 // Eventos del agente (Server-Sent Events de POST /answer/stream): cada uno trae `say`, una frase lista para mostrar.
 export interface StepItem { n: number; cita: string; vigente: boolean; fragmento: string; }
 export interface AgentEvent {
-  type: 'start' | 'plan' | 'think' | 'tool' | 'model' | 'draft' | 'verify' | 'deliver' | 'suggest' | 'final' | 'error';
+  type: 'start' | 'plan' | 'think' | 'tool' | 'model' | 'draft' | 'verify' | 'deliver' | 'suggest' | 'guard' | 'final' | 'error';
   say?: string; ms?: number; name?: string; args?: Record<string, unknown>; summary?: string; items?: StepItem[];
   complexity?: number; strategy?: string; budget?: number; model?: string; text?: string; ok?: boolean; faults?: string[];
   from?: string; to?: string; reason?: string; status?: string; claims?: number; answer?: Answer; message?: string; scenario?: string;

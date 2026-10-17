@@ -145,6 +145,8 @@ def check(text: str, hits: list[Hit], scenario: str, as_of: str, finish_reason: 
         faults.append({"kind": "truncated", "detail": "la respuesta se cortó por longitud"})
     if text.startswith(NO_EVIDENCE):
         return faults
+    if re.match(r"\s*(Buscaré|Leeré|Revisaré|Verificaré|Reformularé|Voy a)\b", text):
+        faults.append({"kind": "narration_only", "detail": "la respuesta empieza narrando lo que harás; responde la pregunta directamente"})
     claims = split_claims(text)
     cited = {n for _, cs in claims for n in cs}
     if not cited:

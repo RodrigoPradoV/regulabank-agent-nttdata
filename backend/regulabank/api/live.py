@@ -31,7 +31,8 @@ class Live:
         self.retriever.p["top_k"] = 8
         provider = load_provider(provider_kind, cache_dir=release / "llm-cache")
         self.agent = AgenticAgent(self.retriever, provider, conflicts=load_conflicts(release / "conflicts.parquet"),
-                                  ledger_path=release / "ledger.jsonl")
+                                  ledger_path=release / "ledger.jsonl",
+                                  evidence_floor=self.retriever.params.get("grade", {}).get("evidence_floor"))
         self._load_conflicts(release)
         self.by_norm: dict[str, list[dict]] = defaultdict(list)
         self.by_article: dict[str, list[dict]] = defaultdict(list)

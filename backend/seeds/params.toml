@@ -68,6 +68,8 @@ ppr = 0.3            # source: docs/08 "fuse2"
 hop = 0.3            # source: igual que ppr; el salto por citas solo entra con strategy = hybrid_hop y se mide contra hybrid
 
 [grade]
-# source: docs/08 "Abstencion": percentil 5 de mean6 sobre las positivas de DESARROLLO del golden (23 preguntas); el reservado no entra.
-# En todo el golden: abstiene 5 de 6 negativas y 3 de 34 positivas. Recalibrar al cambiar corpus o embedding.
-mean6_floor = 0.5037
+# Regla de distancia para no inventar: evidencia = promedio del coseno de los 6 fragmentos mas cercanos a la pregunta (mejor de todas las busquedas);
+# distancia = 1 - evidencia. Si evidencia < evidence_floor la pregunta esta fuera del corpus y el agente se abstiene sin responder.
+# Se calibra con scripts/calibrate_floor.py sobre las 40 preguntas reales (docs/eval); sin valor, la regla no actua.
+# Calibrado 2026-10-17 con 40 preguntas reales (docs/eval): percentil 5 de 23 positivas de desarrollo; AUC 0.897; atrapa 5/6 negativas sola, pierde 0/11 reservadas.
+evidence_floor = 0.6276

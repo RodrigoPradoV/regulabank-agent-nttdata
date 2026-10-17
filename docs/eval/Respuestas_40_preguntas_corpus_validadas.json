@@ -1,0 +1,142 @@
+{
+  "n": 40,
+  "con_corrida": 40,
+  "juzgadas": 40,
+  "confiables_pct": 67.5,
+  "confiables_ic95_pct": [
+    52.5,
+    82.5
+  ],
+  "positivas": {
+    "n": 34,
+    "confiables_pct": 67.6,
+    "respondidas": 32,
+    "abstenciones_falsas": 2,
+    "citas_verificadas_pct": 96.9,
+    "respaldo_pct": 81.2,
+    "responde_pct": 81.2,
+    "cita_el_articulo_de_origen_pct": 93.8,
+    "dato_clave_pct": 78.1
+  },
+  "negativas": {
+    "n": 6,
+    "se_abstuvo_pct": 66.7,
+    "alucinaciones": 2,
+    "ids_que_afirmaron": [
+      "p35",
+      "p39"
+    ]
+  },
+  "alucinacion_pct_de_lo_respondido": 20.6,
+  "costo_total_usd": 0.3124,
+  "segundos": {
+    "p50": 24.2,
+    "p95": 38.4
+  },
+  "por_tipo_confiables_pct": {
+    "condicion_excepcion": [
+      60.0,
+      5
+    ],
+    "definicion": [
+      40.0,
+      5
+    ],
+    "negativa": [
+      66.7,
+      6
+    ],
+    "obligacion": [
+      73.7,
+      19
+    ],
+    "plazo_cifra": [
+      66.7,
+      3
+    ],
+    "procedimiento": [
+      100.0,
+      2
+    ]
+  },
+  "fallas": [
+    {
+      "id": "p02",
+      "tipo": "obligacion",
+      "estado": "ok",
+      "motivo": "Agrega 'cuando la Comisión adopte' y 'requisitos técnicos y de seguridad', que no están en el texto citado (art. 107 solo dice 'se tendrán en cuenta los requisitos del capítulo III, sección 2')."
+    },
+    {
+      "id": "p08",
+      "tipo": "definicion",
+      "estado": "rejected",
+      "motivo": "No responde: 'No pude redactar una respuesta que pase la verificación de citas'; solo lista fuentes sin citar actividades."
+    },
+    {
+      "id": "p09",
+      "tipo": "condicion_excepcion",
+      "estado": "ok",
+      "motivo": "Solo dice 'Leeré el artículo 127'; no da las condiciones (sin apelación, reducción 40%, comprobante de depósito)."
+    },
+    {
+      "id": "p11",
+      "tipo": "plazo_cifra",
+      "estado": "ok",
+      "motivo": "Responde 1 de julio de 2010 (vigencia del nuevo Reglamento); se esperaba '1 de diciembre de 2008'."
+    },
+    {
+      "id": "p12",
+      "tipo": "definicion",
+      "estado": "ok",
+      "motivo": "Agrega 'Deben clasificarlos las entidades del sistema financiero... cartera de consumo no empresarial' y 'excluye financiamientos', no dichos en el texto citado."
+    },
+    {
+      "id": "p19",
+      "tipo": "condicion_excepcion",
+      "estado": "ok",
+      "motivo": "Inventa que son activos que 'no pueden valorarse aisladamente' y exige 'libre de cargas'. El art. 37.2 solo remite al art. 35, y la respuesta omite los requisitos (activos identificados, mismos plazos e importes)."
+    },
+    {
+      "id": "p20",
+      "tipo": "obligacion",
+      "estado": "ok",
+      "motivo": "Agrega que el Directorio debe 'definir su composición y garantizar su funcionamiento documental y de comunicación con la Superintendencia'. El texto no lo dice."
+    },
+    {
+      "id": "p27",
+      "tipo": "obligacion",
+      "estado": "ok",
+      "motivo": "Las infracciones del Código ('revelar el contenido de la ROS', 'no reportar operaciones múltiples', 'no cumplir con la capacitación') no coinciden con el art. 24.4. Omite el contenido del Manual y del Código."
+    },
+    {
+      "id": "p29",
+      "tipo": "definicion",
+      "estado": "abstained",
+      "motivo": "abstencion falsa"
+    },
+    {
+      "id": "p30",
+      "tipo": "obligacion",
+      "estado": "abstained",
+      "motivo": "abstencion falsa"
+    },
+    {
+      "id": "p32",
+      "tipo": "obligacion",
+      "estado": "ok",
+      "motivo": "Dice que la autoridad puede exigir dejar de comercializar y adoptar medidas correctoras, y habla de 'salvaguardia de la Unión'; nada de eso está en los nn. 7-8. Omite las multas del art. 99 y los controles del art. 71."
+    },
+    {
+      "id": "p35",
+      "tipo": "negativa",
+      "estado": "ok",
+      "motivo": ""
+    },
+    {
+      "id": "p39",
+      "tipo": "negativa",
+      "estado": "ok",
+      "motivo": "No dice que no hay sustento. Afirma que en la Res. 11356-2008 'normalmente se fija el plazo de arrendamiento financiero', y el texto citado solo trata garantías preferidas. No da ningún plazo."
+    }
+  ]
+}

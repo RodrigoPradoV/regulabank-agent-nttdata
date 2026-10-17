@@ -87,3 +87,9 @@ def test_limpia_ligaturas_guion_blando_y_nul():
     from regulabank.retrieval.search import clean_text
     assert clean_text("eﬀective oﬀ-balance aﬃliate") == "effective off-balance affiliate"
     assert clean_text("utiliza­cion (\x00i)") == "utilizacion (i)"
+
+
+def test_respuesta_que_solo_narra_no_pasa():
+    from regulabank.agents.answer import check
+    hits = [hit(1, "El plazo es de 24 horas.")]
+    assert "narration_only" in [f["kind"] for f in check("Leeré el artículo 127 para ver las condiciones [1].", hits, "lookup", "2026-10-17")]

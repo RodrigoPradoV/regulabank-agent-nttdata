@@ -33,7 +33,7 @@ class StubRetriever:
                    score=score, sources={}, valid_from=row["valid_from"], valid_to=None, is_current=True)
 
     def search(self, query, as_of, strategy="dense_valid", quotes=False):
-        return SimpleNamespace(hits=[self.hit("c1", as_of, 1.0)])
+        return SimpleNamespace(hits=[self.hit("c1", as_of, 1.0)], trace=SimpleNamespace(evidence_mean6=0.7))
 
     def own_quote(self, qvec, text):
         return text

@@ -33,17 +33,17 @@ if [ "$KEY_OK" = 1 ]; then ssh $H 'systemctl restart regulabank-api && sleep 10 
 
 echo "== 6. nginx (copia de seguridad FUERA de sites-enabled: nginx carga todo lo que hay ahi; prueba y recarga)"
 scp -q "$ROOT/deploy/nginx-regulabank.conf" $H:/tmp/nginx-regulabank.conf
-ssh $H "set -e; BAK=/root/nginx-backups/capitalfoods.before-regulabank.\$(date +%s); mkdir -p /root/nginx-backups
-if ! grep -q '# regulabank:' $SITE; then
-  cp $SITE \$BAK
-  python3 - <<'PY'
-s=open('$SITE').read(); block=open('/tmp/nginx-regulabank.conf').read()
+ssh $H "set -e; BAK=/root/nginx-backups/capitalfoods.before-regulabank.\$(date +%s); mkdir -p /root/nginx-backups; cp $SITE \$BAK
+python3 - <<'PY'
+import re
+s=open('$SITE').read(); block=open('/tmp/nginx-regulabank.conf').read().rstrip('\n')+'\n'
 marker='  # adexdatatrade:'
 assert marker in s, 'no encuentro el bloque de adexdatatrade para insertar antes'
+# si ya hay un bloque de regulabank (desde su comentario hasta el marcador de adexdatatrade), se reemplaza entero
+s=re.sub(r'  # regulabank:.*?(?=  # adexdatatrade:)', '', s, count=1, flags=re.S)
 open('$SITE','w').write(s.replace(marker, block+'\n'+marker,1))
 PY
-  if nginx -t 2>/dev/null; then systemctl reload nginx; else cp \$BAK $SITE; nginx -t; echo 'nginx fallo: restaurado'; exit 4; fi
-fi; nginx -t"
+if nginx -t 2>/dev/null; then systemctl reload nginx; else cp \$BAK $SITE; nginx -t; echo 'nginx fallo: restaurado'; exit 4; fi"
 
 echo "== 7. verificacion publica"
 curl -sf -o /dev/null -w "pagina %{http_code}\n" https://capitalfoods.studio/regulabank/
