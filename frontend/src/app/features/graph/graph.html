@@ -1,0 +1,72 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <p class="page-kicker">Normativa</p>
+      <h1 class="page-title">Grafo</h1>
+      <p class="page-subtitle">Cómo se conectan las {{ nodes().length }} normas del corpus, según tres tipos de evidencia.</p>
+    </div>
+    @if (data(); as d) {
+      <div class="totals">
+        <div><span class="n">{{ d.totals.chunks | number }}</span><span class="l">chunks</span></div>
+        <div><span class="n">{{ d.totals.entities | number }}</span><span class="l">entidades</span></div>
+        <div><span class="n">{{ d.totals.edges | number }}</span><span class="l">aristas</span></div>
+      </div>
+    }
+  </div>
+
+  <div class="cols">
+    <section class="panel side">
+      <div class="panel-head"><h2 class="panel-title">Capa</h2></div>
+      <div class="layers">
+        @for (l of layers; track l.id) {
+          <button class="layer" [class.active]="layer() === l.id" (click)="setLayer(l.id)">
+            <span class="swatch" [attr.data-layer]="l.id"></span>
+            <span class="layer-text"><strong>{{ l.label }}</strong><small>{{ l.rule }}</small></span>
+          </button>
+        }
+      </div>
+      <div class="threshold">
+        <label for="share">Mostrar el {{ share() }} % más fuerte</label>
+        <input id="share" type="range" min="10" max="100" step="10" [value]="share()" (input)="share.set(+$any($event.target).value)" />
+        <p class="muted shown">Se muestran <strong>{{ shown().length }}</strong> de {{ pool().length }} relaciones.
+          @if (hiddenBelow() !== null) { Las {{ pool().length - shown().length }} ocultas tienen menos de {{ hiddenBelow() }}. }</p>
+      </div>
+      @if (layer() === 'nli') {
+        <p class="warn">Sin validar. RoBERTa NLI no se ha medido contra pares etiquetados; las contradicciones de mayor puntaje pueden mezclar temas.</p>
+      }
+    </section>
+
+    <section class="panel center">
+      <div class="panel-head"><h2 class="panel-title">{{ layerInfo().label }}</h2><span class="panel-caption muted">{{ layerInfo().caption }}</span></div>
+      <div class="viz"><svg #svg viewBox="0 0 760 560" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Grafo de normas"></svg></div>
+    </section>
+
+    <section class="panel side">
+      <div class="panel-head"><h2 class="panel-title">{{ selected()?.short ?? 'Norma' }}</h2></div>
+      @if (selected(); as n) {
+        <p class="muted kind">{{ kindLabel(n.kind) }} · {{ n.status === 'in_force' ? 'vigente' : 'derogada' }}@if (n.published) { · publicada {{ n.published }} }</p>
+        <dl class="facts">
+          <div><dt>Chunks</dt><dd>{{ n.chunks | number }}</dd></div>
+          <div><dt>Siguiente</dt><dd>{{ count(n, 'NEXT') | number }}</dd></div>
+          <div><dt>Remisiones</dt><dd>{{ count(n, 'REFERS_TO') | number }}</dd></div>
+          <div><dt>Menciones</dt><dd>{{ count(n, 'MENTIONS') | number }}</dd></div>
+          <div><dt>Similares</dt><dd>{{ count(n, 'SIMILAR') | number }}</dd></div>
+        </dl>
+        <h3 class="sub">Vecinas en esta capa</h3>
+        @if (neighbors().length) {
+          <ul class="list">
+            @for (x of neighbors(); track x.id) {
+              <li><button (click)="select(x.id)"><span>{{ x.short }}</span><b>{{ x.n }}</b></button></li>
+            }
+          </ul>
+        } @else { <p class="muted">Ninguna con este umbral.</p> }
+        <h3 class="sub">Entidades más propias</h3>
+        <ul class="ents">
+          @for (e of n.top_entities; track e.name + e.type) { <li><span>{{ e.name }}</span><i>{{ e.type }}</i></li> }
+        </ul>
+      } @else {
+        <div class="empty"><span>Elige una norma en el grafo.</span></div>
+      }
+    </section>
+  </div>
+</div>

@@ -8,6 +8,7 @@ export const NAVIGATION: NavModule[] = [
   ]},
   { label: 'Normativa', items: [
     { path: '/norms', label: 'Textos', icon: 'books' },
+    { path: '/graph', label: 'Grafo', icon: 'graph' },
     { path: '/conflicts', label: 'Conflictos', icon: 'warning-diamond' },
   ]},
   { label: 'Asistente', items: [
