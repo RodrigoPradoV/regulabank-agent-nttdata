@@ -64,9 +64,9 @@
               <p><span class="pill" [class]="'pill ' + (a.status === 'abstained' ? 'warn' : 'danger')">{{ statusLabel(a.status) }}</span></p>
             }
             <div class="answer">
-              @for (p of parts(a.summary); track $index) {
+              @for (p of answerParts(a); track $index) {
                 @if (p.n) { <button class="chip" [class.on]="t.active === p.n" (click)="focus(i, p.n)" [title]="claim(a, p.n)?.citation?.split('{')?.pop()">{{ p.n }}</button> }
-                @else { <span>{{ p.t }}</span> }
+                @else if (p.b) { <strong>{{ p.t }}</strong> } @else { <span>{{ p.t }}</span> }
               }
             </div>
 

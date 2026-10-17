@@ -29,7 +29,7 @@ const METRICS = [
   { k: '67,5 %', v: 'respuestas confiables en 40 preguntas reales (IC 95 %: 52,5 a 82,5)' },
   { k: '96,9 %', v: 'citas literales verificadas en lo respondido' },
   { k: '81,2 %', v: 'respuestas respaldadas por el juez (Claude, otra familia)' },
-  { k: '6 de 6', v: 'preguntas fuera del corpus abstenidas con la regla de distancia' },
+  { k: '6 de 6', v: 'preguntas fuera del corpus abstenidas, verificado en vivo (la regla de distancia es el respaldo)' },
   { k: '20 %', v: 'de lo respondido agrega algo que no está en la cita: lo que falta mejorar' },
   { k: '0,31 USD', v: 'las 40 preguntas; p50 24 s por respuesta' },
   { k: '0,582', v: 'nDCG@8 del retrieval (0,623 en el golden reservado)' },

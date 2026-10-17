@@ -9,7 +9,7 @@ interface Turn {
   role: 'user' | 'assistant'; text: string; steps: Step[]; answer?: Answer; draft?: string; done: boolean;
   open: boolean; active: number | null; error?: string; startedAt: number; lastAt: number; endedAt?: number;
 }
-interface Part { t?: string; n?: number; }
+interface Part { t?: string; n?: number; b?: boolean; }
 
 const SUGGESTIONS = [
   '¿Cuál es el plazo para reportar una operación sospechosa a la UIF?',
@@ -92,6 +92,13 @@ export class Chat {
     if (ev.type === 'error') { this.patch(t => ({ ...t, done: true, open: false, endedAt: Date.now(), error: ev.message ?? 'Error del agente' })); return; }
     const step: Step = { kind: ev.type, say: ev.say ?? '', name: ev.name, items: ev.items ?? [], ms: ev.ms ?? 0, ok: ev.ok };
     this.patch(t => ({ ...t, steps: [...t.steps, step], lastAt: Date.now(), draft: ev.type === 'draft' ? ev.text : t.draft }));
+  }
+
+  /** Sin sustento en el corpus: desde «lo más cercano» hasta el final va en negrita (es lo que el usuario puede leer en su lugar). */
+  answerParts(a: Answer): Part[] {
+    const i = a.status === 'abstained' ? a.summary.search(/lo m[aá]s cercano/i) : -1;
+    if (i < 0) { return this.parts(a.summary); }
+    return [...this.parts(a.summary.slice(0, i)), ...this.parts(a.summary.slice(i)).map(p => ({ ...p, b: true }))];
   }
 
   /** El texto con las citas [n] separadas para mostrarlas como numeritos dentro de la frase. */
