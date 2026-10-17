@@ -1,0 +1,8 @@
+scenario,condition,value,level,reason
+policy_vs_norm,scenario_is,policy_vs_norm,approve,contradiccion politica-norma: siempre revision humana
+impact,scenario_is,impact,approve,cambio normativo con impacto en politicas: siempre revision humana
+threshold,scenario_is,threshold,notify,cita un umbral numerico: aviso para que un analista lo confirme
+*,fault_kind,not_in_force,approve,cita una version no vigente a as_of: revision humana antes de entregar
+*,fault_kind,inappropriate_language,approve,lenguaje bloqueado detectado: revision humana, no se reintenta
+*,fault_kind,fake_consistency,approve,afirma cumplimiento sin arista que lo respalde: revision humana
+*,always,,auto,nada de lo anterior aplica: se entrega sola

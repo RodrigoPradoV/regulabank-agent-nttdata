@@ -81,6 +81,9 @@ class Trace(BaseModel):
     seen: list[str]
     lists: dict[str, int]
     ppr_new: int
+    route_weights: dict[str, float] = Field(default_factory=dict)  # dense/bm25/entities/ppr; nunca excluyente
+    confidence_label: Literal["ok", "ambiguous", "no_evidence"] | None = None  # salida de `grade` (agents/grade.py)
+    confidence_score: float | None = None  # evidence.mean6, 0 a 1; mismo origen que confidence_label
     faults: list[str]
     fixes: int
     latency_ms: int

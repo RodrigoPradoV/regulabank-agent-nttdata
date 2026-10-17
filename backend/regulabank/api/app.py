@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from regulabank import agents
 from regulabank.api import contracts as c
 from regulabank.api import mock, pipeline
 from regulabank.shared import config
@@ -45,7 +46,8 @@ def article(article_id: str) -> c.Article:
 
 @app.post("/answer", response_model=c.Answer)
 def answer(req: c.AnswerRequest) -> c.Answer:
-    return mock.answer(req)
+    """`answer_graph` sobre `data/corpus_v0` real (docs/09-agents.md); ya no es la maqueta de `mock.py`."""
+    return agents.answer(req, model_provider=settings.model_provider)
 
 
 @app.get("/conflicts", response_model=list[c.Conflict])

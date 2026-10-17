@@ -1,0 +1,41 @@
+# Parametros del agente de respuesta, con procedencia (docs/08-retrieval.md, docs/09-agents.md).
+# Nunca en el prompt ni hardcodeados en el codigo: una persona los puede leer y ajustar sin tocar Python.
+
+[retrieval]
+cand_k = 50      # candidatos por canal antes de fusionar
+fused_k = 100     # candidatos tras la primera fusion (RRF)
+top_k = 8         # chunks finales que ve el redactor
+per_norm = 3      # tope de chunks por norma (salvo escenario `procedure`)
+
+# Pesos base por canal de busqueda (docs/08-retrieval.md, paso `fuse`/`fuse2`). El grafo (`ppr`) nunca se excluye,
+# solo pesa mas o menos segun el escenario (docs/README.md, principio 2: "el grafo suma, no filtra").
+[route.base]
+dense = 1.0
+bm25 = 0.3
+entities = 0.3
+ppr = 0.3
+
+# Pesos por escenario: solo se listan los que cambian respecto a la base.
+[route.overrides.crossref]
+ppr = 0.8
+
+[route.overrides.impact]
+ppr = 1.0
+entities = 0.5
+
+[route.overrides.policy_vs_norm]
+ppr = 0.6
+entities = 0.5
+
+[route.overrides.definition]
+dense = 0.5
+bm25 = 0.1
+
+[route.overrides.threshold]
+entities = 0.6
+
+# Umbrales del nodo `grade` (estilo CRAG) sobre `evidence.mean6`. Se calibran contra el golden set
+# (docs/10-evaluation.md); estos son valores de partida para la version 0 sin golden todavia.
+[grade]
+rescue_floor = 0.08
+ambiguous_floor = 0.2
