@@ -1,4 +1,12 @@
-data/
+# Mantener los artefactos de ingesta locales fuera del repo, excepto el
+# corpus aprobado que se publica para reproducibilidad.
+data/*
+!data/corpus_v0/
+data/corpus_v0/*
+!data/corpus_v0/corpus_chunks.csv
+!data/corpus_v0/corpus_chunks.parquet
+!data/corpus_v0/manifest.json
+!data/corpus_v0/quality_report.csv
 .venv/
 __pycache__/
 *.pyc

@@ -2,21 +2,18 @@
   <div class="page-header">
     <div>
       <p class="page-kicker">Flujo</p>
-      <h1 class="page-title">Del PDF a la respuesta con cita</h1>
+      <h1 class="page-title">Del PDF al grafo</h1>
     </div>
   </div>
-
   <div class="cols">
     <section class="panel side">
       <div class="panel-head"><h2 class="panel-title">Métricas</h2><span class="panel-caption muted">por etapa</span></div>
       <div class="empty"><span>Aquí van las cifras de cada etapa cuando exista el release.</span></div>
     </section>
-
     <section class="panel center">
-      <div class="panel-head"><h2 class="panel-title">Pipeline</h2><span class="panel-caption muted">nueve pasos</span></div>
-      <div class="viz"><svg #svg class="pipeline" [attr.viewBox]="'0 0 520 ' + height" preserveAspectRatio="xMidYMin meet"></svg></div>
+      <div class="panel-head"><h2 class="panel-title">Pipeline</h2><span class="panel-caption muted">siete pasos</span></div>
+      <app-flowchart [steps]="steps" />
     </section>
-
     <section class="panel side">
       <div class="panel-head"><h2 class="panel-title">Agentes</h2><span class="panel-caption muted">quién decide</span></div>
       <div class="empty"><span>Aquí van los agentes: juez, verificador y persona en el bucle.</span></div>
