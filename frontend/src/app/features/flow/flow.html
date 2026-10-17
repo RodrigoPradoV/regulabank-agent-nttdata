@@ -10,21 +10,23 @@
     <ol class="line">
       @for (s of steps; track s.id; let i = $index; let last = $last) {
         <li class="step" [class.on]="selected().id === s.id" (click)="selected.set(s)">
-          <span class="dot">{{ i + 1 }}</span>
-          @if (!last) { <span class="rail"></span> }
-          <span class="label">{{ s.label }}</span>
-          <span class="tool">{{ s.tool }}</span>
+          <div class="marker">
+            <span class="dot">{{ i + 1 }}</span>
+            @if (!last) { <span class="rail"></span> }
+          </div>
+          <div class="body">
+            <div class="head"><span class="label">{{ s.label }}</span><span class="tool">{{ s.tool }}</span></div>
+            @if (selected().id === s.id) {
+              <div class="desc">
+                <p class="desc-text">{{ s.text }}</p>
+                @if (s.fields; as f) {
+                  <div class="fields">@for (k of f; track k) { <span class="pill gray mono">{{ k }}</span> }</div>
+                }
+              </div>
+            }
+          </div>
         </li>
       }
     </ol>
-
-    <div class="desc">
-      <p class="desc-text">{{ selected().text }}</p>
-      @if (selected().fields; as f) {
-        <div class="fields">
-          @for (k of f; track k) { <span class="pill gray mono">{{ k }}</span> }
-        </div>
-      }
-    </div>
   </section>
 </div>
