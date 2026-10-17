@@ -98,7 +98,10 @@ export class Chat {
   answerParts(a: Answer): Part[] {
     const i = a.status === 'abstained' ? a.summary.search(/lo m[aá]s cercano/i) : -1;
     if (i < 0) { return this.parts(a.summary); }
-    return [...this.parts(a.summary.slice(0, i)), ...this.parts(a.summary.slice(i)).map(p => ({ ...p, b: true }))];
+    const rest = a.summary.slice(i);
+    const m = /[.;](\s|$)|\n/.exec(rest);                     // solo esa oracion, no los parrafos que siguen
+    const j = m ? i + m.index + 1 : a.summary.length;
+    return [...this.parts(a.summary.slice(0, i)), ...this.parts(a.summary.slice(i, j)).map(p => ({ ...p, b: true })), ...this.parts(a.summary.slice(j))];
   }
 
   /** El texto con las citas [n] separadas para mostrarlas como numeritos dentro de la frase. */
