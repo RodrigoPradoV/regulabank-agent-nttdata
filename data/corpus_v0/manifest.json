@@ -1,0 +1,231 @@
+{
+  "corpus_version": "0.1.0",
+  "created_at": "2026-10-17T18:23:08.997847+00:00",
+  "inputs": {
+    "source_manifest": "C:\\Users\\valro\\Desktop\\nttdata-probelmanormativa\\fuentes_descargadas\\manifest.json",
+    "graph_ingest": "C:\\Users\\valro\\Desktop\\nttdata-probelmanormativa\\data\\graph_ingest_v0",
+    "hierarchy_nodes_sha256": "e6523dcd912802ff9b3d601f9ac8f9f41f8d5a7b99921c3fa908e78fd10affe2"
+  },
+  "outputs": [
+    "corpus_chunks.parquet",
+    "corpus_chunks.csv",
+    "quality_report.csv",
+    "manifest.json"
+  ],
+  "columns": [
+    "chunk_id",
+    "norm_id",
+    "norm_short",
+    "title",
+    "issuer",
+    "jurisdiction",
+    "norm_kind",
+    "status",
+    "published",
+    "valid_from",
+    "valid_to",
+    "source_url",
+    "source_path",
+    "source_sha256",
+    "article_id",
+    "article_no",
+    "node_type",
+    "parent_path",
+    "page_start",
+    "page_end",
+    "text",
+    "citation",
+    "extraction_method",
+    "confidence",
+    "review_required",
+    "review_reason"
+  ],
+  "chunking": {
+    "unit": "article/section/numeral; never mixes nodes",
+    "split_threshold_chars": 3000,
+    "target_chunk_chars": 2500,
+    "long_unsplit_chars": 8000,
+    "chunk_id": "c_ + sha1(norm_id|article_id|page_start|text)[:16]",
+    "text": "literal PyMuPDF lines (whitespace collapsed) without repeated headers/footers and index pages"
+  },
+  "counts": {
+    "source_records_in_manifest": 28,
+    "sources_processed": 17,
+    "documents_excluded": 11,
+    "total_chunks": 2976,
+    "pages_processed": 2192,
+    "articles_without_text": 19,
+    "review_required_chunks": 258,
+    "duplicate_fragments": 0,
+    "identical_text_across_articles": 2,
+    "invalid_page_ranges": 0,
+    "duplicate_ids": 0,
+    "missing_hashes": 0,
+    "hash_mismatches": 0,
+    "chunks_by_norm": {
+      "pe-ejecutivo-dleg-1531-2022": 24,
+      "pe-sbs-res-9075-2012": 73,
+      "pe-sbs-res-3296-2022": 19,
+      "pe-sbs-res-4221-2023": 78,
+      "pe-sbs-res-11356-2008": 90,
+      "pe-sbs-res-6328-2009": 104,
+      "pe-sbs-res-2116-2009": 29,
+      "pe-sbs-res-2660-2015": 133,
+      "pe-minjus-ds-016-2024-jus": 150,
+      "pe-sbs-res-504-2021": 51,
+      "pe-sbs-res-272-2017": 65,
+      "pe-sbs-res-6523-2013": 45,
+      "pe-sbs-res-789-2018": 105,
+      "int-bcbs-basel-framework-2026": 1513,
+      "int-bcbs-oprisk-principles-2021": 25,
+      "int-fatf-recommendations-2025": 221,
+      "eu-reg-2024-1689": 251
+    },
+    "chunks_by_node_type": {
+      "annex": 123,
+      "article": 946,
+      "chapter": 35,
+      "interpretive_note": 74,
+      "lettered_section": 3,
+      "numbered_section": 1574,
+      "numeral": 34,
+      "preamble": 20,
+      "principle": 14,
+      "provisions": 20,
+      "recommendation": 102,
+      "section": 15,
+      "standard_section": 14,
+      "subchapter": 2
+    }
+  },
+  "excluded": [
+    {
+      "source_id": 1,
+      "norm_id": "pe-congreso-ley-26702-1996",
+      "title": "Ley General del Sistema Financiero - Ley 26702",
+      "reason": "QUARANTINE_OCR"
+    },
+    {
+      "source_id": 10,
+      "norm_id": "pe-congreso-ley-29733-2011",
+      "title": "Ley 29733 - Proteccion de Datos Personales",
+      "reason": "QUARANTINE_OCR"
+    },
+    {
+      "source_id": 14,
+      "norm_id": "pe-congreso-ley-29440-2009",
+      "title": "Sistemas de pagos y liquidacion de valores - Ley 29440",
+      "reason": "QUARANTINE_OCR"
+    },
+    {
+      "source_id": 17,
+      "norm_id": "",
+      "title": "Manuales y guias UIF",
+      "reason": "fuera_del_catalogo_normativo"
+    },
+    {
+      "source_id": 21,
+      "norm_id": "int-iso-iec-27001-2022",
+      "title": "ISO IEC 27001",
+      "reason": "BLOCKED_NO_PUBLIC_TEXT"
+    },
+    {
+      "source_id": 22,
+      "norm_id": "int-iso-22301-2019",
+      "title": "ISO 22301",
+      "reason": "BLOCKED_NO_PUBLIC_TEXT"
+    },
+    {
+      "source_id": 24,
+      "norm_id": "",
+      "title": "Noticias SBS",
+      "reason": "fuera_del_catalogo_normativo"
+    },
+    {
+      "source_id": 25,
+      "norm_id": "",
+      "title": "Comunicados BCRP",
+      "reason": "fuera_del_catalogo_normativo"
+    },
+    {
+      "source_id": 26,
+      "norm_id": "",
+      "title": "Noticias UIF Peru",
+      "reason": "fuera_del_catalogo_normativo"
+    },
+    {
+      "source_id": 27,
+      "norm_id": "",
+      "title": "Comunicados de prensa BIS",
+      "reason": "fuera_del_catalogo_normativo"
+    },
+    {
+      "source_id": 28,
+      "norm_id": "",
+      "title": "Publicaciones FATF GAFI",
+      "reason": "fuera_del_catalogo_normativo"
+    }
+  ],
+  "validations": {
+    "chunk_id_unique": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "norm_id_not_null": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "text_not_empty": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "page_start_le_page_end": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "source_sha256_present": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "source_sha256_matches_file": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "citation_present": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "no_duplicate_fragments": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "source_and_page_preserved": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "csv_roundtrip": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    },
+    "parquet_schema_types": {
+      "passed": true,
+      "failures": 0,
+      "examples": []
+    }
+  },
+  "policy": {
+    "transformer_used": false,
+    "embeddings": false,
+    "ocr_content_included": false
+  }
+}
