@@ -1,0 +1,46 @@
+<div class="page-header">
+  <div>
+    <p class="page-kicker">Normativa</p>
+    <h1 class="page-title">Textos</h1>
+    <p class="page-subtitle">Normas públicas y políticas internas con su historia de versiones.</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="stat-n">{{ counts().total }}</span><span class="stat-l">documentos</span></div>
+    <div class="stat"><span class="stat-n">{{ counts().regulation }}</span><span class="stat-l">normas</span></div>
+    <div class="stat"><span class="stat-n">{{ counts().policy }}</span><span class="stat-l">políticas</span></div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="search">
+    <app-icon name="magnifying-glass" size="sm" />
+    <input class="input" placeholder="Buscar por número, título o tema" [value]="query()" (input)="query.set($any($event.target).value)" />
+  </div>
+  <div class="segmented">
+    <button [class.active]="kind() === 'all'" (click)="kind.set('all')">Todo</button>
+    <button [class.active]="kind() === 'law'" (click)="kind.set('law')">Leyes</button>
+    <button [class.active]="kind() === 'sbs_resolution'" (click)="kind.set('sbs_resolution')">Resoluciones</button>
+    <button [class.active]="kind() === 'internal_policy'" (click)="kind.set('internal_policy')">Políticas</button>
+  </div>
+</div>
+
+<div class="card">
+  <table class="table">
+    <thead><tr><th>Norma</th><th>Tipo</th><th>Emisor</th><th>Publicada</th><th>Artículos</th><th>Temas</th><th>Estado</th></tr></thead>
+    <tbody>
+      @for (n of norms(); track n.id) {
+        <tr class="row-link" (click)="open(n)">
+          <td><strong>{{ n.short }}</strong><div class="muted title">{{ n.title }}</div></td>
+          <td>{{ kindLabel[n.kind] }}</td>
+          <td>{{ n.issuer }}</td>
+          <td class="mono">{{ n.published }}</td>
+          <td>{{ n.n_articles }}</td>
+          <td><div class="chips">@for (t of n.topics; track t) { <span class="pill">{{ t }}</span> }</div></td>
+          <td><span class="pill" [class]="'pill ' + statusClass(n)">{{ statusLabel(n) }}</span></td>
+        </tr>
+      } @empty {
+        <tr><td colspan="7" class="muted empty">Sin resultados.</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

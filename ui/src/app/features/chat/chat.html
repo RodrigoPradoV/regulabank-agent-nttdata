@@ -1,0 +1,73 @@
+<div class="chat">
+  <div class="chat-head">
+    <div>
+      <p class="page-kicker">Asistente</p>
+      <h1 class="page-title">Consulta normativa</h1>
+      <p class="page-subtitle">Cada afirmación lleva cita literal verificada y vigencia a la fecha indicada.</p>
+    </div>
+    <label class="asof">
+      <span class="muted">Vigencia al</span>
+      <input class="input mono" type="date" [value]="asOf()" (input)="asOf.set($any($event.target).value)" />
+    </label>
+  </div>
+
+  <div class="thread" #thread>
+    @if (!turns().length) {
+      <div class="empty">
+        <p class="muted">Prueba con una de estas:</p>
+        <div class="suggestions">
+          @for (s of suggestions; track s) { <button class="btn btn-secondary btn-sm" (click)="ask(s)">{{ s }}</button> }
+        </div>
+      </div>
+    }
+    @for (t of turns(); track $index) {
+      @if (t.role === 'user') {
+        <div class="bubble user">{{ t.text }}</div>
+      } @else {
+        <div class="bubble assistant">
+          @if (t.answer; as a) {
+            <div class="answer-head">
+              <span class="pill" [class]="'pill ' + (a.status === 'ok' ? 'ok' : a.status === 'abstained' ? 'warn' : 'danger')">{{ statusLabel(a.status) }}</span>
+              <span class="pill" [class]="'pill ' + riskClass(a.risk)">{{ riskLabel(a.risk) }}</span>
+              <span class="muted mono">as_of {{ a.as_of }} · {{ a.trace.scenario }} · {{ a.trace.latency_ms }} ms · {{ a.trace.cost_usd }} USD</span>
+            </div>
+            <p class="answer-text">{{ a.summary }}</p>
+            @for (c of a.claims; track c.chunk_id) {
+              <div class="claim">
+                <p class="quote">«{{ c.quote }}»</p>
+                <div class="claim-foot">
+                  <button class="cite" (click)="shelf.openArticle(c.article_id)"><app-icon name="bookmark-simple" size="xs" /> {{ c.citation }}</button>
+                  <span class="pill" [class.ok]="c.verified" [class.danger]="!c.verified">{{ c.verified ? 'cita verificada' : 'cita no verificada' }}</span>
+                </div>
+              </div>
+            }
+            @if (a.history.length) {
+              <div class="history">
+                <p class="section-label">Historia del artículo</p>
+                @for (h of a.history; track h.citation) {
+                  <div class="history-item"><span class="pill">{{ h.change_kind }}</span> <span>{{ h.citation }}</span> @if (h.changed_by) { <span class="muted mono">por {{ h.changed_by }}</span> }</div>
+                }
+              </div>
+            }
+            @if (a.status === 'pending_human') {
+              <div class="hitl">
+                <app-icon name="hand-palm" size="sm" />
+                <span>Esta respuesta cita una versión no vigente a la fecha pedida: queda en cola para aprobación humana.</span>
+                <button class="btn btn-primary btn-sm">Aprobar</button>
+                <button class="btn btn-secondary btn-sm">Rechazar</button>
+              </div>
+            }
+          } @else {
+            <p>{{ t.text }}</p>
+          }
+        </div>
+      }
+    }
+    @if (busy()) { <div class="bubble assistant muted">Buscando y verificando…</div> }
+  </div>
+
+  <form class="composer" (submit)="$event.preventDefault(); ask()">
+    <input class="input" placeholder="Pregunta sobre una norma o política interna" [value]="draft()" (input)="draft.set($any($event.target).value)" [disabled]="busy()" />
+    <button class="btn btn-primary" type="submit" [disabled]="busy() || !draft().trim()"><app-icon name="paper-plane-tilt" size="sm" /> Preguntar</button>
+  </form>
+</div>

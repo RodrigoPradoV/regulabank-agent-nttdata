@@ -1,0 +1,12 @@
+.app { display: flex; height: 100vh; overflow: hidden; }
+.desktop-sidebar { display: none; @media (min-width: 1024px) { display: block; position: fixed; top: 0; left: 0; height: 100vh; z-index: var(--z-fixed); } }
+.main { flex: 1; display: flex; flex-direction: column; min-height: 100vh; overflow: hidden;
+  @media (min-width: 1024px) { margin-left: var(--sidebar-collapsed-width); transition: margin-left var(--transition-layout);
+    .desktop-sidebar:hover ~ & { margin-left: var(--sidebar-width); } } }
+.content { flex: 1; overflow-y: auto; overflow-x: hidden; background: var(--bg-secondary); }
+.content-wrapper { max-width: var(--content-max-width); margin: 0 auto; padding: var(--spacing-xl);
+  @media (max-width: 1024px) { padding: var(--spacing-xl) var(--spacing-lg); } @media (max-width: 768px) { padding: var(--spacing-lg) var(--spacing-md); } }
+.overlay { position: fixed; inset: 0; background: var(--bg-scrim); z-index: var(--z-modal-backdrop); cursor: pointer; @media (min-width: 1024px) { display: none; } }
+.mobile-sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: var(--sidebar-width); transform: translateX(-100%); transition: transform var(--transition-slow);
+  z-index: var(--z-modal); box-shadow: var(--shadow-lg); &.open { transform: translateX(0); } @media (min-width: 1024px) { display: none; }
+  app-sidebar { display: block; height: 100%; } }

@@ -1,0 +1,36 @@
+@if (norm(); as n) {
+  <div class="page-header">
+    <div>
+      <p class="page-kicker"><a routerLink="/norms" class="back"><app-icon name="caret-left" size="xs" /> Textos</a> · {{ kindLabel[n.kind] }}</p>
+      <h1 class="page-title">{{ n.short }}</h1>
+      <p class="page-subtitle">{{ n.title }}</p>
+    </div>
+    <div class="meta">
+      <span class="pill">{{ n.issuer }}</span>
+      <span class="pill mono">{{ n.published }}</span>
+      <span class="pill" [class.ok]="n.status === 'in_force'" [class.warn]="n.status === 'partial'">{{ n.status === 'in_force' ? 'Vigente' : n.status === 'partial' ? 'Modificada' : 'Derogada' }}</span>
+    </div>
+  </div>
+
+  <div class="articles">
+    @for (a of n.articles; track a.id) {
+      <article class="card article" (click)="shelf.openArticle(a.id)">
+        <div class="article-head">
+          <div>
+            <p class="article-path">{{ a.path }}</p>
+            <h2 class="article-title">Artículo {{ a.no }}</h2>
+          </div>
+          <div class="article-meta">
+            <span class="pill" [class.ok]="a.versions.length === 1" [class.warn]="a.versions.length > 1">{{ a.versions.length === 1 ? 'Original' : a.versions.length + ' versiones' }}</span>
+            <span class="muted mono">vigente desde {{ a.current.valid_from }}</span>
+          </div>
+        </div>
+        <p class="article-text">{{ a.current.text }}</p>
+        <div class="article-foot">
+          <div class="chips">@for (e of a.entities; track e) { <span class="pill">{{ e }}</span> }</div>
+          @if (a.refers_to.length) { <span class="muted"><app-icon name="arrow-bend-up-right" size="xs" /> remite a {{ a.refers_to.length }}</span> }
+        </div>
+      </article>
+    }
+  </div>
+}

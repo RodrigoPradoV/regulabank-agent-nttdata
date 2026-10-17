@@ -1,0 +1,10 @@
+<div class="app">
+  <app-sidebar class="desktop-sidebar"></app-sidebar>
+  <main class="main">
+    <app-topbar (menuClick)="toggleMobileSidebar()"></app-topbar>
+    <div class="content"><div class="content-wrapper"><router-outlet></router-outlet></div></div>
+  </main>
+  @if (mobileSidebarOpen()) { <div class="overlay" (click)="toggleMobileSidebar()" aria-hidden="true"></div> }
+  <div class="mobile-sidebar" [class.open]="mobileSidebarOpen()"><app-sidebar></app-sidebar></div>
+  <app-shelf></app-shelf>
+</div>

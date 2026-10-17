@@ -1,0 +1,12 @@
+.back { text-decoration: none; display: inline-flex; align-items: center; gap: 2px; &:hover { color: var(--text-primary); } }
+.meta { display: flex; gap: var(--spacing-sm); }
+.articles { display: flex; flex-direction: column; gap: var(--spacing-md); }
+.article { padding: var(--spacing-lg); cursor: pointer; transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  &:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); } }
+.article-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--spacing-md); margin-bottom: var(--spacing-sm); }
+.article-path { font-size: var(--font-size-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+.article-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); }
+.article-meta { display: flex; align-items: center; gap: var(--spacing-sm); flex-shrink: 0; }
+.article-text { line-height: var(--line-height-relaxed); color: var(--text-primary); }
+.article-foot { display: flex; justify-content: space-between; align-items: center; margin-top: var(--spacing-md); gap: var(--spacing-md); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
