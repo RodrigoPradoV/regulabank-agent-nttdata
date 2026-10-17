@@ -1,7 +1,7 @@
 # 14 · `answer_graph` v0: lo construido, el diagrama real y una limitación conocida
 
 Primera implementación del grafo 1 de `09-agents.md` (`answer_graph`), corriendo de punta a punta contra
-`data/corpus_v0` real. Vive en `backend/regulabank/agents/`; 47 tests en `backend/tests/` (`pytest`).
+`data/corpus_v0` real. Vive en `backend/regulabank/agents/`; 62 tests en `backend/tests/` (`pytest`).
 
 ## Qué está construido vs. qué es un reemplazo temporal
 
@@ -13,12 +13,39 @@ Primera implementación del grafo 1 de `09-agents.md` (`answer_graph`), corriend
 | `risk` (tabla de reglas) | **real**, `seeds/risk_rules.csv` | `agents/risk.py` |
 | `ledger` (una línea por consulta) | **real**, JSONL append-only | `agents/ledger.py` |
 | El grafo (`StateGraph`, bucle de reintento, `interrupt` humano) | **real** | `agents/graph.py` |
-| `retrieve` | **provisional**: BM25-lexical simple (solape de palabras), sin embeddings ni grafo todavía | `agents/retrieve_stub.py` |
+| `retrieve` | **mixto**: lexical simple (solape de palabras, *provisional*, sustituto del denso) **+** entidades estructuradas (*real*, regex), fundidos por RRF — sin embeddings ni grafo de relaciones todavía | `agents/retrieve_stub.py`, `agents/entities.py`, `agents/fuse.py` |
 | `answer` / `judge_evidence` (el modelo) | **provisional**: `FakeProvider` guionado, sin LLM real | `agents/providers.py` |
 
 `retrieve_stub` y `FakeProvider` se reemplazan sin tocar ningún otro nodo del grafo: la forma de salida
 (`list[Hit]`, `Answer`) no cambia, solo cómo se llena. Son intencionalmente los únicos dos componentes que
 dependen de un modelo entrenado.
+
+## Cómo puntúa `retrieve` hoy: dos señales, no una
+
+Ranking simple, sin PPR ni fusión de 5 canales: **semántico** (hoy, lexical; mañana, denso) + **entidades**
+(`norm_ref`, `article_ref`, `deadline`, `amount`, `percentage` — regex, sin modelo, `docs/04-entities.md`).
+Las relaciones del grafo (`REFERS_TO`, `MODIFIES`, `IMPLEMENTS`) **no entran al ranking**: quedan para que el
+modelo las pida como herramienta en `judge_evidence`/`answer` cuando el escenario las necesite (`crossref`,
+`impact`, `policy_vs_norm`) — eso todavía no está implementado, es el siguiente paso natural.
+
+Un detalle importante que surgió probándolo: **RRF puntúa por rango, no por magnitud.** Si se usara el score
+fundido de RRF directamente como "confianza", una pregunta sin ninguna relación real con el corpus podía
+sacar el mismo número que una con una coincidencia fuerte, porque RRF solo sabe que algo quedó primero en su
+canal, no cuán bueno es ese primer lugar. Por eso `Hit.score` (lo que lee `grade` para medir confianza) es la
+**magnitud cruda** del mejor canal — lexical o entidad, el que sea más alto —, y RRF se usa *solo* para decidir
+el orden final de los 8, no el número que se reporta.
+
+Las dos señales son independientes: una coincidencia exacta de entidad (mismo tipo y mismo valor, p. ej. el
+mismo número de norma) alcanza por sí sola para subir la confianza, igual que un buen solape léxico, sin que
+haga falta la otra. Ejemplo real, probado contra `data/corpus_v0`:
+
+| Pregunta | Confianza (`grade.score`) | Resultado |
+|---|---|---|
+| *"¿cuál es el componente procíclico?"* | 0.05 | `no_evidence` |
+| *"¿cuál es el componente procíclico **de la Res. SBS 11356-2008**?"* | 0.38 | `ok` |
+
+Nombrar la norma exacta rescata la confianza aunque el solape de palabras sea flojo — ese es el punto del
+canal de entidades.
 
 ## Limitación conocida (encontrada probándolo, no teórica)
 
@@ -105,7 +132,7 @@ print(build_answer_graph(FakeProvider()).get_graph().draw_mermaid())
 | Nodo | Quién decide | Archivo |
 |---|---|---|
 | `read` | código (regex) | `route.py` |
-| `retrieve` | código (provisional: lexical) | `retrieve_stub.py` |
+| `retrieve` | código (lexical provisional + entidades real, fundidos por RRF) | `retrieve_stub.py`, `entities.py`, `fuse.py` |
 | `grade` | código (umbrales calibrables) | `grade.py` |
 | `judge_evidence` | modelo (`FakeProvider`, luego el real) | `providers.py` |
 | `answer` | modelo | `providers.py` |
@@ -118,7 +145,7 @@ print(build_answer_graph(FakeProvider()).get_graph().draw_mermaid())
 
 ```bash
 cd backend
-python -m pytest tests/ -v              # 47 tests, todos contra data/corpus_v0 real
+python -m pytest tests/ -v              # 62 tests, todos contra data/corpus_v0 real
 python scripts/demo_answer_graph.py      # corre 3 preguntas de ejemplo y muestra el grafo completo
 ```
 

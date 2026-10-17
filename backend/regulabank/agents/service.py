@@ -1,8 +1,8 @@
 """Puente entre `answer_graph` y el contrato HTTP (`regulabank.api.contracts`). No agrega logica nueva.
 
 `mock.py` (docstring propio) dice que se reemplaza por lecturas al release real cuando exista; `data/corpus_v0`
-ya existe, asi que `/answer` corre el grafo de verdad (con `retrieve_stub` lexico mientras no haya embeddings)
-en vez de las respuestas guionadas por palabra clave. El proveedor del modelo sale de `MODEL_PROVIDER`
+ya existe, asi que `/answer` corre el grafo de verdad (con `retrieve_stub`: lexico + entidades, sin embeddings
+todavia) en vez de las respuestas guionadas por palabra clave. El proveedor del modelo sale de `MODEL_PROVIDER`
 (docs/12-infra.md); hoy solo existe `mock`, los demas se agregan en `providers.py` sin tocar este puente.
 
 `history` queda vacio por ahora: para armarlo hace falta el grafo de versiones (`horizon`) cargado, y
@@ -86,7 +86,7 @@ def answer(req: api_c.AnswerRequest, model_provider: str = "mock") -> api_c.Answ
         trace=api_c.Trace(
             scenario=out.get("scenario", "lookup"),
             seen=out.get("seen", []),
-            lists={"lexical": len(out.get("hits", []))},  # unico canal mientras no haya denso/bm25/ppr reales
+            lists={"fused": len(out.get("hits", []))},  # lexical+entidades ya fundidos; sin ppr real todavia
             ppr_new=0,
             route_weights=weights.model_dump() if weights else {},
             confidence_label=grade.label if grade else None,

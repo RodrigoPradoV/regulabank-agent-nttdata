@@ -29,6 +29,18 @@ def test_retrieve_unrelated_question_returns_nothing_or_weak_hits() -> None:
     assert hits == []
 
 
+def test_retrieve_rescues_weak_lexical_match_via_exact_entity_match() -> None:
+    """Una pregunta que nombra una norma puntual (`norm_ref`) debe subir de confianza aunque el solape
+    lexico sea flojo -- esta es la razon de ser del canal de entidades (docs/04-entities.md)."""
+    hits_without_norm = retrieve_stub.retrieve("cual es el componente prociclico", "2026-10-17")
+    hits_with_norm = retrieve_stub.retrieve(
+        "cual es el componente prociclico de la res sbs 11356-2008", "2026-10-17"
+    )
+    mean6_without = sum(h.score for h in hits_without_norm[:6]) / 6
+    mean6_with = sum(h.score for h in hits_with_norm[:6]) / 6
+    assert mean6_with > mean6_without
+
+
 def test_retrieve_excludes_versions_expired_before_as_of() -> None:
     """Si todas las filas de un corpus de prueba estan vencidas a `as_of`, no debe devolver nada de ahi."""
     corpus = [{
