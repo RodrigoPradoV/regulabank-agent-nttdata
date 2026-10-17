@@ -8,6 +8,7 @@ devuelve None: el build local no depende del grafo (docs/06-graphs.md).
 from __future__ import annotations
 
 import logging
+import re
 from collections import Counter
 from typing import Any
 
@@ -23,6 +24,14 @@ CHUNK_PROPS = ("norm_id", "norm_short", "title", "issuer", "norm_kind", "status"
                "valid_to", "article_id", "article_no", "node_type", "parent_path", "page_start", "page_end",
                "citation", "confidence", "review_required", "text")
 ENTITY_PROPS = ("type", "name", "key", "catalog_id", "n_chunks", "n_norms")
+
+
+_CTRL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
+
+
+def _clean(row: dict[str, Any]) -> dict[str, Any]:
+    """FalkorDB no acepta caracteres de control (NUL de PDFs) en parametros; solo se limpia la copia del grafo."""
+    return {k: _CTRL.sub("", v) if isinstance(v, str) else v for k, v in row.items()}
 
 
 def _batches(rows: list[dict[str, Any]], size: int = BATCH):
@@ -54,10 +63,10 @@ def load(chunks: pa.Table, entities: pa.Table, edges: pa.Table, settings: config
         pass
     g = stores.graph(settings)
 
-    chunk_rows = [{"id": r["chunk_id"], **{k: r[k] for k in CHUNK_PROPS}} for r in chunks.to_pylist()]
+    chunk_rows = [_clean({"id": r["chunk_id"], **{k: r[k] for k in CHUNK_PROPS}}) for r in chunks.to_pylist()]
     for b in _batches(chunk_rows, batch):
         g.query("UNWIND $rows AS r MERGE (c:Chunk {id: r.id}) SET c += r", {"rows": b})
-    entity_rows = [{"id": r["entity_id"], **{k: r[k] for k in ENTITY_PROPS}} for r in entities.to_pylist()]
+    entity_rows = [_clean({"id": r["entity_id"], **{k: r[k] for k in ENTITY_PROPS}}) for r in entities.to_pylist()]
     for b in _batches(entity_rows, batch):
         g.query("UNWIND $rows AS r MERGE (e:Entity {id: r.id}) SET e += r", {"rows": b})
     article_rows = sorted({(r["article_id"], r["norm_id"]) for r in chunks.to_pylist()})

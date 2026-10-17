@@ -1,0 +1,28 @@
+{
+  "started_at": "2026-10-17T19:26:27+00:00",
+  "finished_at": "2026-10-17T19:29:00+00:00",
+  "seconds_total": 153.6,
+  "device": "cuda",
+  "platform": "Linux-6.8.0-79-generic-x86_64-with-glibc2.39",
+  "chunks": {
+    "path": "chunks.parquet",
+    "sha256": "11d10cd180ce1968e6f6dee2235d567cb85f0ad40f78b0522ac0f44c8f196f77",
+    "rows": 2976,
+    "limit": null
+  },
+  "stages": {
+    "gliner2": {
+      "model": "fastino/gliner2-large-v1",
+      "threshold": 0.3,
+      "window_words": 384,
+      "overlap_words": 64,
+      "processed_now": 2976,
+      "resumed": 0,
+      "rows_now": 47454,
+      "seconds": 147.1,
+      "rows_total": 47454
+    }
+  },
+  "python": "3.11.13",
+  "torch": "2.8.0+cu128"
+}

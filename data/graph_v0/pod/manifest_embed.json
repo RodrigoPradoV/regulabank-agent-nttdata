@@ -1,0 +1,27 @@
+{
+  "started_at": "2026-10-17T19:28:59+00:00",
+  "finished_at": "2026-10-17T19:42:22+00:00",
+  "seconds_total": 803.5,
+  "device": "mps",
+  "platform": "macOS-26.5-arm64-arm-64bit",
+  "chunks": {
+    "path": "chunks.parquet",
+    "sha256": "11d10cd180ce1968e6f6dee2235d567cb85f0ad40f78b0522ac0f44c8f196f77",
+    "rows": 2976,
+    "limit": null
+  },
+  "stages": {
+    "embed": {
+      "doc_prefix": "title: {norm_short}, art. {article_no} | text: ",
+      "processed_now": 2976,
+      "resumed": 0,
+      "model": "google/embeddinggemma-300m",
+      "dim": 768,
+      "fallback_used": false,
+      "seconds": 794.1,
+      "rows_total": 2976
+    }
+  },
+  "python": "3.11.15",
+  "torch": "2.14.1"
+}
