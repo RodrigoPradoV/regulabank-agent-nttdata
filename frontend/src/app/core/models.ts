@@ -44,3 +44,15 @@ export interface Decision { action: 'accept' | 'edit' | 'reject'; note?: string 
 export const NORM_KIND_LABEL: Record<NormKind, string> = {
   law: 'Ley', sbs_resolution: 'Resolución SBS', sbs_circular: 'Circular SBS', bcrp_circular: 'Circular BCRP', internal_policy: 'Política interna',
 };
+
+// Flujo (espejo de backend/regulabank/api/pipeline.py)
+export type StageStatus = 'done' | 'partial' | 'pending';
+export type StageArea = 'corpus' | 'graph' | 'search' | 'agents';
+export interface PipelineModel { name: string; role: string; family: string; size: string; runs_on: string; status: 'active' | 'optional' | 'planned' | 'rejected'; why: string; }
+export interface PipelineParam { name: string; value: string; source: string; }
+export interface Stage {
+  id: string; area: StageArea; label: string; summary: string; input_title: string; input: string[]; output_title: string; output: string[];
+  models: PipelineModel[]; params: PipelineParam[]; counts: Record<string, number | string>; status: StageStatus; doc: string; code: string;
+}
+export interface Pipeline { release_id: string; stages: Stage[]; }
+export const AREA_LABEL: Record<StageArea, string> = { corpus: 'Corpus', graph: 'Grafo', search: 'Búsqueda', agents: 'Agentes' };

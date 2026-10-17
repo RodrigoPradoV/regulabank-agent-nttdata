@@ -1,0 +1,22 @@
+.stats { display: flex; gap: var(--spacing-lg); }
+.stat { display: flex; flex-direction: column; align-items: flex-end; }
+.stat-n { font-size: var(--font-size-2xl); font-weight: var(--font-weight-bold); letter-spacing: -0.02em; line-height: 1; &.small { font-size: var(--font-size-lg); line-height: 1.5; } }
+.stat-l { font-size: var(--font-size-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+.journey-card { padding: var(--spacing-md) var(--spacing-lg); margin-bottom: var(--spacing-lg); }
+.journey { width: 100%; height: auto; display: block; font-family: var(--font-family); }
+.stop { cursor: pointer; circle { transition: r var(--transition-fast); } &:hover circle { r: 12; } }
+.stop-area { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; }
+.stop-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; fill: var(--text-primary); font-variant-numeric: tabular-nums; }
+.stop-status { font-size: 11px; font-weight: 600; }
+.stop-caption { font-size: 11px; fill: var(--text-secondary); }
+.stages { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: var(--spacing-md); }
+.stage { display: flex; flex-direction: column; gap: var(--spacing-sm); padding: var(--spacing-lg); text-decoration: none; color: inherit; transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  &:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); } }
+.stage-head { display: flex; align-items: center; gap: var(--spacing-sm); }
+.stage-num { width: 28px; height: 28px; border-radius: var(--radius-full); background: var(--area-soft); color: var(--area-ink); font-size: var(--font-size-sm); font-weight: var(--font-weight-bold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stage-title-wrap { flex: 1; min-width: 0; }
+.stage-area { font-size: var(--font-size-xs); color: var(--area-ink); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--font-weight-semibold); }
+.stage-title { font-size: var(--font-size-lg); font-weight: var(--font-weight-semibold); letter-spacing: -0.01em; }
+.stage-summary { color: var(--text-secondary); font-size: var(--font-size-base); }
+.stage-io { display: flex; align-items: center; gap: var(--spacing-sm); font-size: var(--font-size-sm); color: var(--text-secondary); app-icon { color: var(--area-ink); } .io-out { color: var(--text-primary); font-weight: var(--font-weight-medium); } }
+.stage-models { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }

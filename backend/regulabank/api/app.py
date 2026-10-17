@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from regulabank.api import contracts as c
-from regulabank.api import mock
+from regulabank.api import mock, pipeline
 from regulabank.shared import config
 
 settings = config.load()
@@ -59,3 +59,8 @@ def decide(conflict_id: str, decision: c.Decision) -> c.Conflict:
     if cf is None:
         raise HTTPException(404, "conflicto no encontrado")
     return cf
+
+
+@app.get("/pipeline", response_model=pipeline.Pipeline)
+def get_pipeline() -> pipeline.Pipeline:
+    return pipeline.build(settings)
