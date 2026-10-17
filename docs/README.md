@@ -14,6 +14,7 @@ Un archivo por área. Se leen en orden la primera vez; después cada uno se cons
 
 | Archivo | Área | Qué decide |
 |---|---|---|
+| `00-brief.md` | Encargo | el SOW del hack mapeado a este diseño: 7 componentes, 6 casos sembrados, 7 consultas, criterios de éxito |
 | `01-problem.md` | Problema | usuarios, preguntas tipo, criterio de éxito, qué NO hacemos |
 | `02-corpus.md` | Corpus | fuentes (SBS, BCRP, leyes, políticas internas), captura, identidad, versiones y vigencia |
 | `03-chunking.md` | Unidades | norma → título → capítulo → artículo → numeral → literal; ids y procedencia |
@@ -26,6 +27,7 @@ Un archivo por área. Se leen en orden la primera vez; después cada uno se cons
 | `10-evaluation.md` | Medición | golden, métricas, fingerprint, grade, autonomía |
 | `11-demo.md` | Hack | plan por sprint, qué mostrar, impacto, repo |
 | `12-infra.md` | Infraestructura | FalkorDB, LanceDB, entorno, proveedores LLM, costos |
+| `brief/` | Originales | `sow.md` / `sow.docx` y `sources.md` / `sources.docx` tal como llegaron |
 
 ## Principios que atraviesan todo
 
