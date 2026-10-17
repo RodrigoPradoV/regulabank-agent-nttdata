@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from regulabank import agents
+from regulabank.agents import metrics as metrics_mod
 from regulabank.api import contracts as c
 from regulabank.api import mock, pipeline
 from regulabank.shared import config
@@ -66,3 +67,22 @@ def decide(conflict_id: str, decision: c.Decision) -> c.Conflict:
 @app.get("/pipeline", response_model=pipeline.Pipeline)
 def get_pipeline() -> pipeline.Pipeline:
     return pipeline.build(settings)
+
+
+@app.get("/metrics", response_model=c.MetricsResponse)
+def metrics(
+    date_from: str | None = None, date_to: str | None = None, scenario: str | None = None,
+    status: str | None = None, risk: str | None = None, model: str | None = None,
+    q: str | None = None, limit: int = 50,
+) -> c.MetricsResponse:
+    """Dashboard de trazabilidad sobre `data/ledger/answer_graph.jsonl` (docs/10-evaluation.md, Componente 6/7)."""
+    filters = metrics_mod.MetricsFilters(
+        date_from=date_from, date_to=date_to, scenario=scenario, status=status, risk=risk, model=model, q=q,
+    )
+    entries = metrics_mod.filter_entries(metrics_mod.load(), filters)
+    ordered = sorted(entries, key=lambda e: e.get("logged_at") or "", reverse=True)
+    return c.MetricsResponse(
+        summary=metrics_mod.summarize(entries),
+        series=metrics_mod.daily_series(entries),
+        entries=ordered[:max(limit, 0)],
+    )

@@ -1,0 +1,17 @@
+.filters {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: var(--spacing-md);
+  align-items: end;
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field-label { font-size: var(--font-size-xs); font-weight: var(--font-weight-semibold); color: var(--text-secondary); }
+.field-wide { grid-column: span 2; }
+.filters-actions { display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-md); }
+
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);
+  @media (max-width: 860px) { grid-template-columns: 1fr; } }
+
+.chart { display: block; width: 100%; height: 180px; }
+
+.pills { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+
+.table-scroll { overflow-x: auto; }

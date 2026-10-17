@@ -6,6 +6,8 @@ humana por riesgo alto, con su reanudacion (`Command(resume=...)`).
 
 from __future__ import annotations
 
+import json
+
 from langgraph.types import Command
 
 from regulabank.agents.graph import build_answer_graph
@@ -73,3 +75,20 @@ def test_ledger_gets_one_line_per_run(tmp_path, monkeypatch) -> None:
 
     lines = ledger_file.read_text(encoding="utf-8").strip().splitlines()
     assert len(lines) == 1
+
+
+def test_ledger_line_carries_question_as_of_and_latency(tmp_path, monkeypatch) -> None:
+    ledger_file = tmp_path / "answer_graph.jsonl"
+    monkeypatch.setattr("regulabank.agents.graph.ledger_mod.DEFAULT_LEDGER_PATH", ledger_file)
+
+    graph = _graph()
+    graph.invoke(
+        {"question": "reglamento de gestion del riesgo de liquidez", "as_of": "2024-06-01"},
+        {"configurable": {"thread_id": "t-ledger-fields"}},
+    )
+
+    entry = json.loads(ledger_file.read_text(encoding="utf-8").strip())
+    assert entry["question"] == "reglamento de gestion del riesgo de liquidez"
+    assert entry["as_of"] == "2024-06-01"
+    assert isinstance(entry["latency_ms"], int)
+    assert entry["latency_ms"] >= 0

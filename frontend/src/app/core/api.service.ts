@@ -1,7 +1,10 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Answer, AnswerRequest, Article, Conflict, Decision, NormDetail, NormSummary, Pipeline } from './models';
+import {
+  Answer, AnswerRequest, Article, Conflict, Decision, MetricsFilters, MetricsResponse, NormDetail, NormSummary,
+  Pipeline,
+} from './models';
 
 export const API_URL = 'http://127.0.0.1:8010';
 
@@ -16,4 +19,12 @@ export class ApiService {
   conflicts(): Observable<Conflict[]> { return this.http.get<Conflict[]>(`${API_URL}/conflicts`); }
   pipeline(): Observable<Pipeline> { return this.http.get<Pipeline>(`${API_URL}/pipeline`); }
   decide(id: string, d: Decision): Observable<Conflict> { return this.http.post<Conflict>(`${API_URL}/conflicts/${id}/decide`, d); }
+
+  metrics(filters: MetricsFilters): Observable<MetricsResponse> {
+    let params = new HttpParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== null && value !== '') params = params.set(key, String(value));
+    }
+    return this.http.get<MetricsResponse>(`${API_URL}/metrics`, { params });
+  }
 }

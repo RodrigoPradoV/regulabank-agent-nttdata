@@ -122,3 +122,47 @@ class Conflict(BaseModel):
 class Decision(BaseModel):
     action: Literal["accept", "edit", "reject"]
     note: str | None = None
+
+
+class MetricsSummary(BaseModel):
+    total: int
+    by_status: dict[str, int]
+    by_risk: dict[str, int]
+    by_scenario: dict[str, int]
+    fault_counts: dict[str, int]
+    fixes_histogram: dict[str, int]
+    human_review_rate: float
+    latency_ms_avg: float
+    latency_ms_p50: float
+    latency_ms_p95: float
+    time_saved_minutes: float
+    human_baseline_minutes: float
+
+
+class MetricsSeriesPoint(BaseModel):
+    bucket: str
+    count: int
+    latency_ms_avg: float
+    abstained: int
+    rejected: int
+
+
+class MetricsEntry(BaseModel):
+    logged_at: str
+    question: str | None = None
+    as_of: str | None = None
+    scenario: str | None = None
+    status: str | None = None
+    risk: str | None = None
+    latency_ms: int | None = None
+    fixes: int = 0
+    faults: list[str] = Field(default_factory=list)
+    human_decision: str | None = None
+    model: str | None = None
+    seen: list[str] = Field(default_factory=list)
+
+
+class MetricsResponse(BaseModel):
+    summary: MetricsSummary
+    series: list[MetricsSeriesPoint]
+    entries: list[MetricsEntry]

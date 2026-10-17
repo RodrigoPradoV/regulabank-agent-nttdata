@@ -13,4 +13,7 @@ export const NAVIGATION: NavModule[] = [
   { label: 'Asistente', items: [
     { path: '/chat', label: 'Consulta', icon: 'chat-circle-text' },
   ]},
+  { label: 'Trazabilidad', items: [
+    { path: '/metrics', label: 'Métricas del agente', icon: 'gauge' },
+  ]},
 ];

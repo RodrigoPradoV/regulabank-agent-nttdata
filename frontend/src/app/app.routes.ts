@@ -10,6 +10,7 @@ export const routes: Routes = [
     { path: 'norms/:id', loadComponent: () => import('./features/norms/norm-detail').then(m => m.NormDetailPage) },
     { path: 'chat', loadComponent: () => import('./features/chat/chat').then(m => m.Chat) },
     { path: 'conflicts', loadComponent: () => import('./features/conflicts/conflicts').then(m => m.Conflicts) },
+    { path: 'metrics', loadComponent: () => import('./features/metrics/metrics').then(m => m.Metrics) },
   ]},
   { path: '**', redirectTo: 'norms' },
 ];

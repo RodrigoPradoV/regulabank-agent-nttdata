@@ -1,0 +1,180 @@
+<div class="page" data-area="agents">
+  <div class="page-header">
+    <div>
+      <p class="page-kicker area">Trazabilidad</p>
+      <h1 class="page-title">Métricas del agente</h1>
+      <p class="page-subtitle">Cada consulta de <code class="mono">answer_graph</code> queda en el ledger; esta vista lo agrega y lo filtra, nunca lo reescribe.</p>
+    </div>
+    <button class="btn btn-secondary btn-sm" type="button" (click)="reload()" [disabled]="loading()">
+      <app-icon name="arrows-clockwise" size="sm" /> Actualizar
+    </button>
+  </div>
+
+  <form class="panel" (ngSubmit)="reload()">
+    <div class="panel-head"><h2 class="panel-title">Filtros</h2><span class="panel-caption muted">combinables</span></div>
+    <div class="filters">
+      <label class="field">
+        <span class="field-label">Desde</span>
+        <input class="input" type="date" [value]="dateFrom()" (input)="dateFrom.set($any($event.target).value)" />
+      </label>
+      <label class="field">
+        <span class="field-label">Hasta</span>
+        <input class="input" type="date" [value]="dateTo()" (input)="dateTo.set($any($event.target).value)" />
+      </label>
+      <label class="field">
+        <span class="field-label">Escenario</span>
+        <select class="input" [value]="scenario()" (change)="scenario.set($any($event.target).value)">
+          <option value="">Todos</option>
+          @for (pair of scenarioLabel | keyvalue; track pair.key) {
+            <option [value]="pair.key">{{ pair.value }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">Estado</span>
+        <select class="input" [value]="status()" (change)="status.set($any($event.target).value)">
+          <option value="">Todos</option>
+          @for (pair of statusLabel | keyvalue; track pair.key) {
+            <option [value]="pair.key">{{ pair.value }}</option>
+          }
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-label">Riesgo</span>
+        <select class="input" [value]="risk()" (change)="risk.set($any($event.target).value)">
+          <option value="">Todos</option>
+          @for (pair of riskLabel | keyvalue; track pair.key) {
+            <option [value]="pair.key">{{ pair.value }}</option>
+          }
+        </select>
+      </label>
+      <label class="field field-wide">
+        <span class="field-label">Buscar en la pregunta</span>
+        <input class="input" placeholder="p. ej. liquidez, provisiones…" [value]="q()" (input)="q.set($any($event.target).value)" />
+      </label>
+    </div>
+    <div class="filters-actions">
+      <button class="btn btn-primary btn-sm" type="submit">Aplicar filtros</button>
+      <button class="btn btn-ghost btn-sm" type="button" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <p class="muted">{{ error() }}</p>
+  }
+
+  @if (data(); as m) {
+    <div class="summary" style="--cols: 6">
+      <div class="figure">
+        <p class="figure-label">Consultas</p>
+        <p class="figure-value accent tnum">{{ m.summary.total }}</p>
+        <p class="figure-sub">en el rango filtrado</p>
+      </div>
+      <div class="figure">
+        <p class="figure-label">Entregadas</p>
+        <p class="figure-value tnum">{{ pct((m.summary.by_status['ok'] ?? 0) / (m.summary.total || 1)) }}</p>
+        <p class="figure-sub">sin falta tras verify</p>
+      </div>
+      <div class="figure">
+        <p class="figure-label">Abstención</p>
+        <p class="figure-value tnum">{{ pct((m.summary.by_status['abstained'] ?? 0) / (m.summary.total || 1)) }}</p>
+        <p class="figure-sub">sin evidencia suficiente</p>
+      </div>
+      <div class="figure">
+        <p class="figure-label">Revisión humana</p>
+        <p class="figure-value tnum">{{ pct(m.summary.human_review_rate) }}</p>
+        <p class="figure-sub">riesgo = approve</p>
+      </div>
+      <div class="figure">
+        <p class="figure-label">Latencia p50 / p95</p>
+        <p class="figure-value tnum">{{ ms(m.summary.latency_ms_p50) }} / {{ ms(m.summary.latency_ms_p95) }}</p>
+        <p class="figure-sub">por consulta</p>
+      </div>
+      <div class="figure">
+        <p class="figure-label">Tiempo ahorrado</p>
+        <p class="figure-value accent tnum">{{ round(m.summary.time_saved_minutes) }} min</p>
+        <p class="figure-sub">estimado, línea base ~{{ m.summary.human_baseline_minutes }} min/caso</p>
+      </div>
+    </div>
+
+    <div class="cols-2">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Consultas por día</h2><span class="panel-caption muted">volumen</span></div>
+        <svg #chart class="chart"></svg>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Resultado</h2><span class="panel-caption muted">por estado final</span></div>
+        <div class="pills">
+          @for (pair of entries(m.summary.by_status); track pair[0]) {
+            <span class="pill" [class]="statusPillClass(pair[0])">{{ statusText(pair[0]) }} · {{ pair[1] }}</span>
+          } @empty { <p class="muted">Sin consultas en el rango filtrado.</p> }
+        </div>
+        <div class="panel-note">Automático: {{ m.summary.by_risk['auto'] ?? 0 }} · Notifica: {{ m.summary.by_risk['notify'] ?? 0 }} · Revisión humana: {{ m.summary.by_risk['approve'] ?? 0 }}</div>
+      </section>
+    </div>
+
+    <div class="cols-2">
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Por escenario</h2></div>
+        <ol class="rows">
+          @for (pair of entries(m.summary.by_scenario); track pair[0]; let i = $index) {
+            <li class="row">
+              <span class="row-num">{{ i + 1 }}</span>
+              <div class="row-head"><p class="row-name">{{ scenarioText(pair[0]) }}</p><p class="row-role tnum">{{ pair[1] }}</p></div>
+            </li>
+          } @empty { <p class="muted">Sin datos.</p> }
+        </ol>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head"><h2 class="panel-title">Fallas más frecuentes</h2><span class="panel-caption muted">detectadas por verify</span></div>
+        <ol class="rows">
+          @for (pair of entries(m.summary.fault_counts); track pair[0]; let i = $index) {
+            <li class="row">
+              <span class="row-num">{{ i + 1 }}</span>
+              <div class="row-head"><p class="row-name mono">{{ pair[0] }}</p><p class="row-role tnum">{{ pair[1] }}</p></div>
+            </li>
+          } @empty { <p class="muted">Ninguna falta registrada en el rango.</p> }
+        </ol>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head"><h2 class="panel-title">Ledger</h2><span class="panel-caption muted">últimas {{ m.entries.length }} consultas</span></div>
+      <div class="table-scroll">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha</th><th>Pregunta</th><th>Escenario</th><th>Estado</th><th>Riesgo</th>
+              <th>Latencia</th><th>Fixes</th><th>Faltas</th><th>Decisión</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of m.entries; track e.logged_at + (e.question ?? '')) {
+              <tr>
+                <td class="mono">{{ e.logged_at.slice(0, 19) }}</td>
+                <td>{{ e.question ?? '—' }}</td>
+                <td>{{ scenarioText(e.scenario) }}</td>
+                <td><span class="pill" [class]="statusPillClass(e.status)">{{ statusText(e.status) }}</span></td>
+                <td>{{ riskText(e.risk) }}</td>
+                <td class="tnum">{{ e.latency_ms != null ? ms(e.latency_ms) : '—' }}</td>
+                <td class="tnum">{{ e.fixes }}</td>
+                <td class="mono">{{ e.faults.length ? e.faults.join(', ') : '—' }}</td>
+                <td>{{ e.human_decision ?? '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="9" class="muted">Sin consultas en el rango filtrado.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  } @else if (loading()) {
+    <p class="muted">Cargando métricas…</p>
+  }
+
+  @if (tip(); as t) {
+    <div class="tip" [style.left.px]="t.x + 12" [style.top.px]="t.y + 12">{{ t.text }}</div>
+  }
+</div>

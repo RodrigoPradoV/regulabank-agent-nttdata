@@ -41,6 +41,36 @@ export interface Conflict {
 }
 export interface Decision { action: 'accept' | 'edit' | 'reject'; note?: string | null; }
 
+// Dashboard de trazabilidad (espejo de /metrics en backend/regulabank/api/contracts.py)
+export interface MetricsFilters {
+  date_from?: string; date_to?: string; scenario?: string; status?: string; risk?: string; model?: string;
+  q?: string; limit?: number;
+}
+export interface MetricsSummary {
+  total: number; by_status: Partial<Record<string, number>>; by_risk: Partial<Record<string, number>>;
+  by_scenario: Partial<Record<string, number>>; fault_counts: Partial<Record<string, number>>;
+  fixes_histogram: Partial<Record<string, number>>;
+  human_review_rate: number; latency_ms_avg: number; latency_ms_p50: number; latency_ms_p95: number;
+  time_saved_minutes: number; human_baseline_minutes: number;
+}
+export interface MetricsSeriesPoint { bucket: string; count: number; latency_ms_avg: number; abstained: number; rejected: number; }
+export interface MetricsEntry {
+  logged_at: string; question: string | null; as_of: string | null; scenario: string | null; status: string | null;
+  risk: string | null; latency_ms: number | null; fixes: number; faults: string[]; human_decision: string | null;
+  model: string | null; seen: string[];
+}
+export interface MetricsResponse { summary: MetricsSummary; series: MetricsSeriesPoint[]; entries: MetricsEntry[]; }
+
+export const STATUS_LABEL: Record<string, string> = {
+  ok: 'Entregada', abstained: 'Abstención', rejected: 'Rechazada', pending_human: 'En revisión',
+};
+export const RISK_LABEL: Record<string, string> = { auto: 'Automático', notify: 'Notifica', approve: 'Revisión humana' };
+export const SCENARIO_LABEL: Record<string, string> = {
+  lookup: 'Búsqueda directa', definition: 'Definición', threshold: 'Umbral', procedure: 'Procedimiento',
+  validity: 'Vigencia', crossref: 'Referencia cruzada', policy_vs_norm: 'Política vs. norma', impact: 'Impacto',
+  negative: 'Control negativo',
+};
+
 export const NORM_KIND_LABEL: Record<NormKind, string> = {
   law: 'Ley', sbs_resolution: 'Resolución SBS', sbs_circular: 'Circular SBS', bcrp_circular: 'Circular BCRP', internal_policy: 'Política interna',
 };

@@ -15,3 +15,11 @@ def append(entry: dict[str, Any], path: Path = DEFAULT_LEDGER_PATH) -> None:
     record = {"logged_at": datetime.now(UTC).isoformat(), **entry}
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def read_all(path: Path = DEFAULT_LEDGER_PATH) -> list[dict[str, Any]]:
+    """Todas las lineas del ledger, en el orden en que se escribieron. Vacio si todavia no corrio nada."""
+    if not path.exists():
+        return []
+    with open(path, encoding="utf-8") as fh:
+        return [json.loads(line) for line in fh if line.strip()]

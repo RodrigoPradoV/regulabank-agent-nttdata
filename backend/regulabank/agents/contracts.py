@@ -94,6 +94,7 @@ class State(TypedDict, total=False):
 
     question: str
     as_of: str
+    started_at: float  # time.perf_counter() en `read`; `ledger` lo resta para la latencia (docs/10-evaluation.md)
     scenario: Scenario
     route_weights: RouteWeights
     hits: list[Hit]

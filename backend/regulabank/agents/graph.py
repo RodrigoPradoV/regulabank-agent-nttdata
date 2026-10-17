@@ -17,6 +17,7 @@ answer -> verify -+- ok --------> risk -+- auto/notify --> deliver -> ledger
 
 from __future__ import annotations
 
+import time
 from datetime import date
 from typing import Any
 
@@ -59,7 +60,10 @@ def build_answer_graph(provider: BaseProvider, checkpointer: Any | None = None):
     def node_read(state: State) -> dict:
         as_of = state.get("as_of") or date.today().isoformat()
         scenario = route_mod.classify(state["question"])
-        return {"as_of": as_of, "scenario": scenario, "route_weights": route_mod.route(scenario)}
+        return {
+            "as_of": as_of, "started_at": time.perf_counter(), "scenario": scenario,
+            "route_weights": route_mod.route(scenario),
+        }
 
     def node_retrieve(state: State) -> dict:
         hits = retrieve_stub.retrieve(state["question"], state["as_of"])
@@ -117,7 +121,13 @@ def build_answer_graph(provider: BaseProvider, checkpointer: Any | None = None):
 
     def node_ledger(state: State) -> dict:
         answer = state.get("answer")
+        started_at = state.get("started_at")
+        # Si el caso paso por `human` (`interrupt`), esta latencia incluye la espera humana: no es el tiempo de
+        # computo del agente solo, es el tiempo total del caso hasta resolverse (ambos sirven, pero son distintos).
+        latency_ms = int((time.perf_counter() - started_at) * 1000) if started_at is not None else None
         ledger_mod.append(path=ledger_mod.DEFAULT_LEDGER_PATH, entry={
+            "question": state.get("question"),
+            "as_of": state.get("as_of"),
             "scenario": state.get("scenario"),
             "seen": state.get("seen", []),
             "claims": len(answer.claims) if answer else 0,
@@ -127,6 +137,8 @@ def build_answer_graph(provider: BaseProvider, checkpointer: Any | None = None):
             "human_decision": (state.get("human") or HumanResponse(type="accept")).type if state.get("human") else None,
             "status": state.get("status"),
             "model": provider.name,
+            "latency_ms": latency_ms,
+            "cost_usd": state.get("cost_usd"),
         })
         return {}
 
