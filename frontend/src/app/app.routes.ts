@@ -10,7 +10,7 @@ export const routes: Routes = [
     { path: 'norms', loadComponent: () => import('./features/norms/norms').then(m => m.Norms) },
     { path: 'norms/:id', loadComponent: () => import('./features/norms/norm-detail').then(m => m.NormDetailPage) },
     { path: 'chat', loadComponent: () => import('./features/chat/chat').then(m => m.Chat) },
-    { path: 'conflicts', loadComponent: () => import('./features/conflicts/conflicts').then(m => m.Conflicts) },
+    { path: 'conflicts', redirectTo: 'norms', pathMatch: 'full' },  // la pagina Conflictos esta desactivada (el codigo sigue en features/conflicts)
   ]},
   { path: '**', redirectTo: 'norms' },
 ];
