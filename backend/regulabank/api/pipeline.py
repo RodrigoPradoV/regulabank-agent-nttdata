@@ -109,7 +109,7 @@ def build(settings: config.Settings) -> Pipeline:
             models=[
                 Model(name="regex", role="norm_ref, article_ref, deadline, amount, percentage, defined_term", family="regex", size="n/a", runs_on="cpu", status="active", why="forma fija: precisión casi perfecta; da las aristas REFERS_TO y los valores que comparan reglas"),
                 Model(name="gazetteer", role="regulator, institution_type, risk, product", family="gazetteer", size="n/a", runs_on="cpu", status="active", why="vocabulario cerrado del dominio"),
-                Model(name="fastino/gliner2-large-v1", role="role, sanction, report, obligation (zero-shot, etiquetas propias)", family="ner", size="large", runs_on="mps", status="optional", why="umbral 0,3 al extraer, corte después; en otro corpus 51 % → 99 % de precisión tras curar por entidad"),
+                Model(name="fastino/gliner2-large-v1", role="role, sanction, report, obligation, product (zero-shot, etiquetas propias)", family="ner", size="large", runs_on="mps", status="active", why="decisión 2026-10-17: va sí o sí; umbral 0,3 al extraer y corte después; en otro corpus 51 % → 99 % de precisión tras curar por entidad"),
                 Model(name="mrm8488/bert-spanish-cased-finetuned-ner (BETO)", role="voto PER/ORG/LOC", family="ner", size="base", runs_on="cpu", status="rejected", why="decisión 2026-10-17: los tipos útiles aquí no son PER/ORG/LOC; el voto no corroboraba en otro corpus"),
             ],
             params=[Param(name="score GLiNER2", value="≥ 0,5 o 2 votos", source="provisional, calibrar con 200 chunks etiquetados"), Param(name="entidad entra", value="n_chunks ≥ 2 (o tipo norm_ref/article_ref/defined_term)", source="docs/04-entities.md")],

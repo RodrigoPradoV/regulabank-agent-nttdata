@@ -29,7 +29,7 @@ Regla de oro: **lo que tiene forma fija se extrae con regex y se verifica litera
 
 | Papel | Modelo | Notas |
 |---|---|---|
-| NER abierto, etiquetas propias | `fastino/gliner2-large-v1` (GLiNER2) | zero-shot con las etiquetas de arriba en español; umbral bajo (0,3) al extraer, se guarda el score y se corta después |
+| NER abierto, etiquetas propias | `fastino/gliner2-large-v1` (GLiNER2) | **obligatorio** (decisión 2026-10-17); zero-shot con las etiquetas de arriba en español; umbral bajo (0,3) al extraer, se guarda el score y se corta después |
 | NER clásico (voto) | `MMG/xlm-roberta-large-ner-spanish`, `mrm8488/bert-spanish-cased-finetuned-ner` | PER/ORG/LOC/MISC; corroboran `regulator`, `role`, `institution_type`; `model_max_length=512` explícito |
 | Segmentación | SaT `sat-3l-sm` + reglas | ventanas al presupuesto del modelo; nunca cortar dentro de «N.°» |
 
