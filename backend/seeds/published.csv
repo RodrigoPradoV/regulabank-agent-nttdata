@@ -1,0 +1,18 @@
+norm_id,published,precision,issued,confidence,source_url,evidence
+pe-sbs-res-11356-2008,2008-11-21,day,2008-11-19,high,https://www.sunat.gob.pe/legislacion/nor_graf/2008/noviembre/nl20081121.pdf,"Indice de Normas Legales de El Peruano, viernes 21 de noviembre de 2008"
+pe-sbs-res-6328-2009,2009-06-20,day,2009-06-18,low,https://www.bcrp.gob.pe/docs/Publicaciones/Revista-Estudios-Economicos/19/Estudios-Economicos-19-3.pdf,BCRP: el 20 de junio de 2009 la SBS publico el reglamento; puede referirse al portal SBS y no a El Peruano
+pe-sbs-res-2116-2009,,,2009-04-02,none,,No se hallo fecha de publicacion con evidencia; solo emision 2009-04-02 y 'entrara en vigencia al dia siguiente a su publicacion'
+pe-sbs-res-9075-2012,2012-12-07,day,2012-12-05,medium,https://www.bcrp.gob.pe/docs/Publicaciones/Reporte-Estabilidad-Financiera/2013/Mayo/ref-mayo-2013-recuadro-1.pdf,"BCRP: Reglamento para la Gestion del Riesgo de Liquidez, publicado el 7 de diciembre de 2012 (fuente secundaria)"
+pe-sbs-res-6523-2013,2013-11-02,day,2013-10-30,high,https://busquedas.elperuano.pe/dispositivo/NL/1008675-1,Cabecera El Peruano: Fecha de publicacion 02/11/2013
+pe-sbs-res-2660-2015,2015-05-18,day,2015-05-14,high,https://sinia.minam.gob.pe/sites/default/files/sinia/archivos/public/docs/ordenanz_031-2014-grsm.pdf,Fe de erratas en El Peruano del 29-05-2015: publicada en Separata Especial el 18 de mayo de 2015
+pe-sbs-res-272-2017,2017-01-23,day,2017-01-18,medium,https://vlex.com.pe/vid/660772181,vLex: Fecha de publicacion 23 Enero 2017; edicion El Peruano lunes 23 de enero de 2017
+pe-sbs-res-789-2018,2018-03-03,day,2018-02-28,medium,https://vlex.com.pe/vid/resolucion-sbs-n-789-896600994,vLex: Fecha de publicacion 03 Marzo 2018
+pe-sbs-res-504-2021,2021-02-23,day,2021-02-19,high,https://busquedas.elperuano.pe/dispositivo/NL/1929393-1,Cabecera El Peruano: Fecha de publicacion 23/02/2021
+pe-sbs-res-3296-2022,2022-10-31,day,2022-10-28,medium,https://vlex.com.pe/vid/resolucion-sbs-n-03296-913511080,vLex: Fecha de publicacion 31 Octubre 2022
+pe-sbs-res-4221-2023,2023-12-22,day,2023-12-20,high,https://vlex.com.pe/vid/resolucion-sbs-n-04221-972895520,vLex copia de El Peruano 22-12-2023; confirmado por boletin Rubio Leguia Normand
+pe-ejecutivo-dleg-1531-2022,2022-03-19,day,2022-03-18,high,https://busquedas.elperuano.pe/dispositivo/NL/2049959-1,El Peruano: Fecha de publicacion 19/03/2022
+pe-minjus-ds-016-2024-jus,2024-11-30,day,,medium,https://vlex.com.pe/vid/decreto-supremo-n-016-1060435180,Separata especial El Peruano sabado 30 de noviembre de 2024 (fuente secundaria)
+eu-reg-2024-1689,2024-07-12,day,2024-06-13,high,https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=OJ:L_202401689,"EUR-Lex: Diario Oficial serie L, 12.7.2024 (acto original, no el consolidado)"
+int-bcbs-oprisk-principles-2021,2021-03-31,day,,high,https://www.bis.org/bcbs/publ/d515.htm,bis.org d515: Date Published 31 March 2021
+int-fatf-recommendations-2025,2025-12,month,,medium,corpus_chunks.parquet (portada del PDF),Portada: 'Actualizacion a diciembre de 2025'; no hay dia en fuente oficial
+int-bcbs-basel-framework-2026,2026-10-17,edition,,low,corpus_chunks.parquet (portada del PDF),"Portada: 'This document has been generated on 17/10/2026 based on the Basel Framework data available on the BIS website'; es la fecha de la edicion, el BIS no da una fecha unica de publicacion"

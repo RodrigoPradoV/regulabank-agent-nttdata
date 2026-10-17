@@ -30,3 +30,18 @@ Sin validar. Con p ≥ 0,9 hay 916 contradicciones y con p ≥ 0,99 hay 278. Las
 distintos («las OSFL no son sujetos obligados» contra cláusulas de debida diligencia), así que el 7,2 % está
 inflado. Se mide contra `nli/etiquetar_pares.csv` (200 pares repartidos por cluster HDBSCAN) antes de usarlo.
 Es una tabla (`nli/conflicts.parquet`), no aristas: el grafo conserva sus 4. 2.498 de 2.976 chunks tienen algún par.
+
+## Fecha de publicación (`published`)
+
+| Dato | Estado |
+|---|---|
+| Filas con fecha | 2.947 de 2.976 |
+| Normas con fecha | 16 de 17, con evidencia por norma en `backend/seeds/published.csv` |
+| Sin fecha | Res. SBS 2116-2009 (29 chunks): solo se halló la emisión, 2009-04-02 |
+| Fecha de día confirmada en El Peruano o fuente primaria | 9 normas |
+| Fuente secundaria (vLex, BCRP) | 5 normas: 9075-2012, 3296-2022, 272-2017, 789-2018, DS 016-2024-JUS |
+| Confianza baja | Res. 6328-2009 (20-06-2009, puede ser el portal SBS) |
+| Precisión menor al día | FATF `2025-12` (mes); Basel Framework `2026-10-17` (fecha de edición del PDF, el BIS no da una sola) |
+
+`backend/scripts/apply_published.py` aplica el CSV a cualquier `corpus_chunks.parquet`; `data/graph_v0/chunks.parquet`
+ya lo trae aplicado. El parquet de `main` (`data/corpus_v0`) no se tocó.
