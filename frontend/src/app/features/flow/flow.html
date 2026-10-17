@@ -3,70 +3,28 @@
     <div>
       <p class="page-kicker area">Flujo</p>
       <h1 class="page-title">Del PDF a la respuesta con cita</h1>
-      <p class="page-subtitle">Nueve paradas, cuatro áreas. El grosor de la cinta es el volumen que pasa por cada una; clic abre la etapa con su entrada, su salida y sus transformers.</p>
     </div>
   </div>
 
-  @if (pipeline(); as p) {
-    <section class="summary" style="--cols: 4">
-      <div class="figure"><span class="figure-label">Etapas</span><span class="figure-value">{{ p.stages.length }}</span><span class="figure-sub">en el orden del flujo</span></div>
-      <div class="figure"><span class="figure-label">Listas</span><span class="figure-value accent">{{ done() }}</span><span class="figure-sub">con manifiesto y cifras</span></div>
-      <div class="figure"><span class="figure-label">Modelos activos</span><span class="figure-value">{{ activeModels() }}</span><span class="figure-sub">sin contar reglas ni vocabularios</span></div>
-      <div class="figure"><span class="figure-label">Release</span><span class="figure-value mono">{{ p.release_id }}</span><span class="figure-sub">data/releases</span></div>
-    </section>
+  <section class="panel">
+    <ol class="line">
+      @for (s of steps; track s.id; let i = $index; let last = $last) {
+        <li class="step" [class.on]="selected().id === s.id" (click)="selected.set(s)">
+          <span class="dot">{{ i + 1 }}</span>
+          @if (!last) { <span class="rail"></span> }
+          <span class="label">{{ s.label }}</span>
+          <span class="tool">{{ s.tool }}</span>
+        </li>
+      }
+    </ol>
 
-    <section class="panel">
-      <div class="panel-head"><h2 class="panel-title">Recorrido</h2><span class="panel-caption">pasa el mouse por una parada</span></div>
-      <div class="viz">
-        <svg class="journey" [attr.viewBox]="'0 0 ' + W + ' ' + H" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <linearGradient id="jg" x1="0" x2="1" y1="0" y2="0">
-              @for (s of stops(); track s.stage.id; let i = $index) {
-                <stop [attr.offset]="(i / (stops().length - 1)) * 100 + '%'" [attr.stop-color]="ink[s.stage.area].fill" />
-              }
-            </linearGradient>
-          </defs>
-          <path class="ribbon" [attr.d]="ribbon()" fill="url(#jg)" />
-          @for (s of stops(); track s.stage.id; let i = $index) {
-            <g class="stop" [attr.transform]="'translate(' + s.x + ',0)'" (click)="open(s.stage)" (mousemove)="showTip($event, s)" (mouseleave)="hideTip()">
-              <rect x="-62" y="30" width="124" [attr.height]="H - 30" fill="transparent" />
-              <text y="52" text-anchor="middle" class="stop-area" [attr.fill]="ink[s.stage.area].ink">{{ s.stage.label.toUpperCase() }}</text>
-              <text y="84" text-anchor="middle" class="stop-value tnum">{{ s.value }}</text>
-              <line y1="94" [attr.y2]="base - 14" stroke="rgba(0,0,0,0.12)" />
-              <circle [attr.cy]="base" r="9" [attr.fill]="ink[s.stage.area].fill" stroke="#fff" stroke-width="3" class="dot" [style.animation-delay]="(60 * i) + 'ms'" [style.transform-origin]="'0px ' + base + 'px'" />
-              <text [attr.y]="base + 36" text-anchor="middle" class="stop-status" [attr.fill]="s.stage.status === 'done' ? '#1e7f3a' : s.stage.status === 'partial' ? '#7a5a00' : '#a1a1a6'">{{ statusLabel(s.stage.status) }}</text>
-              <text [attr.y]="base + 56" text-anchor="middle" class="stop-caption">
-                @for (l of s.caption; track $index; let j = $index) { <tspan x="0" [attr.dy]="j === 0 ? 0 : 15">{{ l }}</tspan> }
-              </text>
-            </g>
-          }
-        </svg>
-      </div>
-      <div class="legend">
-        @for (g of areas(); track g.area) { <span><i [style.background]="ink[g.area].fill"></i>{{ g.label }}</span> }
-      </div>
-    </section>
-
-    <div class="areas">
-      @for (g of areas(); track g.area) {
-        <section class="area-card" [attr.data-area]="g.area">
-          <div class="area-head"><i></i><span>{{ g.label }}</span><span class="area-count">{{ g.stages.length }} {{ g.stages.length === 1 ? 'etapa' : 'etapas' }}</span></div>
-          @for (s of g.stages; track s.id) {
-            <a class="area-link" [routerLink]="['/flow', s.id]">
-              <div class="area-link-body">
-                <div class="t">{{ s.label }} <span class="pill" [class]="'pill ' + statusClass(s.status)">{{ statusLabel(s.status) }}</span></div>
-                <div class="d">{{ s.input_title }} → {{ s.output_title }}</div>
-                <div class="m">
-                  @for (m of s.models; track m.name) { @if (m.status === 'active' && m.family !== 'regex' && m.family !== 'gazetteer') { <span class="pill area">{{ m.name }}</span> } }
-                </div>
-              </div>
-              <app-icon name="caret-right" size="sm" class="chev" />
-            </a>
-          }
-        </section>
+    <div class="desc">
+      <p class="desc-text">{{ selected().text }}</p>
+      @if (selected().fields; as f) {
+        <div class="fields">
+          @for (k of f; track k) { <span class="pill gray mono">{{ k }}</span> }
+        </div>
       }
     </div>
-  }
-
-  @if (tip(); as t) { <div class="tip" [style.left.px]="t.x" [style.top.px]="t.y">{{ t.text }}</div> }
+  </section>
 </div>
