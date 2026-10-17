@@ -68,3 +68,22 @@ def test_riesgo_por_tabla_y_por_version_vieja():
 def test_split_claims_y_numeros():
     assert split_claims("Primera [1]. Segunda [2][3].")[1] == ("Segunda [2][3].", [2, 3])
     assert numbers_in("S/ 10 000 y 1,5 %") >= {"10000", "1.5"}
+
+
+def test_nombre_de_norma_no_es_cifra_inventada():
+    from regulabank.agents.answer import check
+    hits = [hit(1, "Se reporta dentro de 24 horas.")]
+    assert check("La Res. SBS 2660-2015 fija 24 horas [1].", hits, "lookup", "2026-10-17") == []
+    assert [f["kind"] for f in check("La Res. SBS 2660-2015 fija 48 horas [1].", hits, "lookup", "2026-10-17")] == ["foreign_fact"]
+
+
+def test_quita_el_preambulo_de_narracion():
+    from regulabank.agents.answer import strip_preamble
+    assert strip_preamble("Buscaré inconsistencias y reformularé.\n\nNo hay contradicción [1].") == "No hay contradicción [1]."
+    assert strip_preamble("El plazo es de 24 horas [1].") == "El plazo es de 24 horas [1]."
+
+
+def test_limpia_ligaturas_guion_blando_y_nul():
+    from regulabank.retrieval.search import clean_text
+    assert clean_text("eﬀective oﬀ-balance aﬃliate") == "effective off-balance affiliate"
+    assert clean_text("utiliza­cion (\x00i)") == "utilizacion (i)"

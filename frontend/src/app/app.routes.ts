@@ -5,7 +5,7 @@ export const routes: Routes = [
   { path: '', component: Shell, children: [
     { path: '', redirectTo: 'norms', pathMatch: 'full' },
     { path: 'flow', loadComponent: () => import('./features/flow/flow').then(m => m.Flow) },
-    { path: 'score', loadComponent: () => import('./features/score/score').then(m => m.Score) },
+    { path: 'score', redirectTo: 'flow', pathMatch: 'full' },
     { path: 'graph', loadComponent: () => import('./features/graph/graph').then(m => m.Graph) },
     { path: 'norms', loadComponent: () => import('./features/norms/norms').then(m => m.Norms) },
     { path: 'norms/:id', loadComponent: () => import('./features/norms/norm-detail').then(m => m.NormDetailPage) },

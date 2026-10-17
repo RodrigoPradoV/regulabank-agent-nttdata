@@ -66,6 +66,10 @@ class Claim(BaseModel):
     valid_from: str
     valid_to: str | None
     verified: bool
+    n: int = 0                  # numero [n] con que el texto cita este fragmento
+    norm_short: str = ""
+    article_no: str = ""
+    is_current: bool = True
 
 
 class HistoryItem(BaseModel):
@@ -88,6 +92,8 @@ class Trace(BaseModel):
     cost_usd: float
     model: str
     prompt_version: str
+    tool_calls: int = 0
+    models: list[str] = Field(default_factory=list)   # modelos usados, en orden (el agente puede escalar)
 
 
 class Answer(BaseModel):

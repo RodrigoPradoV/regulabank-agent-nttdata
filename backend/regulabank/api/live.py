@@ -10,7 +10,9 @@ import os
 from collections import defaultdict
 from pathlib import Path
 
-from regulabank.agents.answer import AnswerAgent
+import pyarrow.parquet as pq
+
+from regulabank.agents.agentic import PROMPT_VERSION, AgenticAgent, load_conflicts
 from regulabank.agents.llm import load_provider
 from regulabank.api import contracts as c
 from regulabank.graphs import embed as embed_mod
@@ -27,16 +29,48 @@ class Live:
         self.retriever = Retriever(release, emb)
         self.retriever.p["top_k"] = 8
         provider = load_provider(provider_kind, cache_dir=release / "llm-cache")
-        from regulabank.agents import answer as answer_mod
-        self.agent = AnswerAgent(self.retriever, provider, default_strategy="dense_valid",
-                                 mean6_floor=float(self.retriever.params.get("grade", {}).get("mean6_floor", 0)) or None,
-                                 ledger_path=release / "ledger.jsonl")
-        self.agent.route = answer_mod.load_route()
+        self.agent = AgenticAgent(self.retriever, provider, conflicts=load_conflicts(release / "conflicts.parquet"),
+                                  ledger_path=release / "ledger.jsonl")
+        self._load_conflicts(release)
         self.by_norm: dict[str, list[dict]] = defaultdict(list)
         self.by_article: dict[str, list[dict]] = defaultdict(list)
         for row in self.retriever.rows.values():
             self.by_norm[row["norm_id"]].append(row)
             self.by_article[row["article_id"]].append(row)
+
+    def _load_conflicts(self, release: Path, limit: int = 60, p_min: float = 0.99) -> None:
+        """Conflictos de la tabla NLI (release/conflicts.parquet): los de mayor probabilidad, sin validar."""
+        self._conflicts: dict[str, c.Conflict] = {}
+        path = release / "conflicts.parquet"
+        if not path.exists():
+            return
+        rows = [r for r in pq.read_table(path).to_pylist() if r["label"] == "contradiction" and r["p_contradiction"] >= p_min]
+        rows.sort(key=lambda r: -r["p_contradiction"])
+        seen: set = set()
+        for r in rows:
+            key = (r["chunk_a"], r["chunk_b"])
+            if key in seen:
+                continue
+            seen.add(key)
+            a, b = self.retriever.rows[r["chunk_a"]], self.retriever.rows[r["chunk_b"]]
+            self._conflicts[r["pair_id"]] = c.Conflict(
+                id=r["pair_id"], policy_chunk_id=r["chunk_a"], policy_citation=a["citation"], policy_quote=r["premise"],
+                norm_version_id=r["chunk_b"], norm_citation=b["citation"], norm_quote=r["hypothesis"], relation="contradicts",
+                method="nli", score=round(float(r["p_contradiction"]), 4),
+                reason=f"RoBERTa XNLI: contradicción (p = {r['p_contradiction']:.3f}) sobre «{r['entity_id'].split(':', 1)[-1]}». Sin validar con etiquetas.",
+                status="pending_human")
+            if len(self._conflicts) >= limit:
+                break
+
+    def conflicts(self) -> list[c.Conflict]:
+        return list(self._conflicts.values())
+
+    def decide(self, conflict_id: str, d: c.Decision) -> c.Conflict | None:
+        cf = self._conflicts.get(conflict_id)
+        if cf is None:
+            return None
+        cf.status = "dismissed" if d.action == "reject" else "confirmed"
+        return cf
 
     def norms(self) -> list[c.NormSummary]:
         out = []
@@ -70,28 +104,54 @@ class Live:
         arts = [a for a in (self._article(i) for i in dict.fromkeys(r["article_id"] for r in rows)) if a]
         return c.NormDetail(**summary.model_dump(), articles=arts)
 
-    def answer(self, req: c.AnswerRequest) -> c.Answer:
-        s = self.agent.ask(req.question, req.as_of, req.thread_id)
+    def _to_answer(self, s: dict, events: list[dict]) -> c.Answer:
         rows = self.retriever.rows
         claims = []
         for cl in s.get("claims", []):
             row = rows[cl["chunk_id"]]
             claims.append(c.Claim(text=cl["text"], chunk_id=cl["chunk_id"], article_id=row["article_id"], quote=cl["quote"],
                                   citation=cl["citation"], valid_from=cl["valid_from"] or "", valid_to=cl["valid_to"],
-                                  verified=bool(cl["verified"])))
-        history = []
-        for h in s.get("hits", []):
-            for it in self.retriever._history.get(h.chunk_id, []):
-                row = rows[it.chunk_id]
-                history.append(c.HistoryItem(article_id=row["article_id"], citation=row["citation"], valid_from=it.valid_from or "",
-                                             valid_to=it.valid_to, change_kind="replaced", changed_by=None))
+                                  verified=bool(cl["verified"]), n=cl["n"], norm_short=row["norm_short"],
+                                  article_no=row["article_no"] or "", is_current=bool(cl["is_current"])))
         u = s.get("usage", {})
-        trace = c.Trace(scenario=s["scenario"], seen=[h.chunk_id for h in s.get("hits", [])], lists=s.get("lists", {}),
-                        ppr_new=s.get("ppr_new", 0), faults=[f["kind"] for f in s.get("faults", [])], fixes=s.get("fixes", 0),
+        models = [self.agent.models[0]] + [e["to"] for e in events if e.get("type") == "model"]
+        trace = c.Trace(scenario=s["scenario"], seen=[h.chunk_id for h in s.get("hits", [])],
+                        lists={"search": s["tb"].n_search, "herramientas": s.get("calls", 0)}, ppr_new=0,
+                        faults=[f["kind"] for f in s.get("faults", [])], fixes=s.get("fixes", 0),
                         latency_ms=s["timings_ms"].get("total", 0), cost_usd=u.get("cost_usd", 0.0), model=u.get("model", "none"),
-                        prompt_version="answer-v1")
+                        prompt_version=PROMPT_VERSION, tool_calls=s.get("calls", 0), models=models)
         return c.Answer(thread_id=s["thread_id"], status=s["status"], risk=s["risk"], as_of=s["as_of"], summary=s["summary"],
-                        claims=claims, history=history, trace=trace)
+                        claims=claims, history=[], trace=trace)
+
+    def answer(self, req: c.AnswerRequest) -> c.Answer:
+        events: list[dict] = []
+        final: dict = {}
+        for kind, payload in self.agent.run(req.question, req.as_of, req.thread_id):
+            if kind == "event":
+                events.append(payload)
+            else:
+                final = payload
+        return self._to_answer(final, events)
+
+    def stream(self, req: c.AnswerRequest):
+        """Server-Sent Events: un evento por paso del agente y al final `final` con la respuesta completa."""
+        import json as _json
+
+        def sse(d: dict) -> str:
+            return "data: " + _json.dumps(d, ensure_ascii=False, default=str) + "\n\n"
+
+        events: list[dict] = []
+        final: dict | None = None
+        try:
+            for kind, payload in self.agent.run(req.question, req.as_of, req.thread_id):
+                if kind == "event":
+                    events.append(payload)
+                    yield sse(payload)
+                else:
+                    final = payload
+            yield sse({"type": "final", "answer": self._to_answer(final or {}, events).model_dump()})
+        except Exception as exc:  # noqa: BLE001 - el error llega a la interfaz como evento, no como corte de la conexion
+            yield sse({"type": "error", "message": f"{type(exc).__name__}: {str(exc)[:300]}"})
 
 
 def maybe_live() -> Live | None:

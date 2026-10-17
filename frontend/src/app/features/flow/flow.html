@@ -2,21 +2,32 @@
   <div class="page-header">
     <div>
       <p class="page-kicker">Flujo</p>
-      <h1 class="page-title">Del PDF al grafo</h1>
+      <h1 class="page-title">De la norma a la respuesta</h1>
+      <p class="page-subtitle">Un solo recorrido. Lo naranja es el agente: ahí decide el modelo, y todo lo demás es código.</p>
+    </div>
+    <div class="legend">
+      <span><i style="background:#007aff"></i>Corpus</span><span><i style="background:#34c759"></i>Grafo</span>
+      <span><i style="background:#ff9500"></i>Agente</span><span><i style="background:#1d1d1f"></i>Respuesta</span>
     </div>
   </div>
   <div class="cols">
     <section class="panel side">
-      <div class="panel-head"><h2 class="panel-title">Métricas</h2><span class="panel-caption muted">por etapa</span></div>
-      <div class="empty"><span>Aquí van las cifras de cada etapa cuando exista el release.</span></div>
+      <div class="panel-head"><h2 class="panel-title">Medido</h2><span class="panel-caption muted">hoy</span></div>
+      <dl class="metrics">
+        @for (m of metrics; track m.k) { <div><dt>{{ m.k }}</dt><dd>{{ m.v }}</dd></div> }
+      </dl>
     </section>
     <section class="panel center">
-      <div class="panel-head"><h2 class="panel-title">Pipeline</h2><span class="panel-caption muted">siete pasos</span></div>
+      <div class="panel-head"><h2 class="panel-title">Recorrido</h2><span class="panel-caption muted">{{ steps.length }} pasos</span></div>
       <app-flowchart [steps]="steps" />
     </section>
     <section class="panel side">
-      <div class="panel-head"><h2 class="panel-title">Agentes</h2><span class="panel-caption muted">quién decide</span></div>
-      <div class="empty"><span>Aquí van los agentes: juez, verificador y persona en el bucle.</span></div>
+      <div class="panel-head"><h2 class="panel-title">Quién decide</h2><span class="panel-caption agent">en el agente</span></div>
+      <ul class="decides">
+        @for (d of decides; track d.node) {
+          <li><div><b>{{ d.node }}</b><span class="who" [class.model]="d.who.startsWith('modelo')">{{ d.who }}</span></div><p>{{ d.what }}</p></li>
+        }
+      </ul>
     </section>
   </div>
 </div>

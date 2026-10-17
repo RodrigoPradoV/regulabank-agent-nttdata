@@ -22,13 +22,14 @@ export interface AnswerRequest { question: string; as_of?: string | null; thread
 export interface Claim {
   text: string; chunk_id: string; article_id: string; quote: string; citation: string;
   valid_from: string; valid_to: string | null; verified: boolean;
+  n?: number; norm_short?: string; article_no?: string; is_current?: boolean;
 }
 export interface HistoryItem {
   article_id: string; citation: string; valid_from: string; valid_to: string | null; change_kind: string; changed_by: string | null;
 }
 export interface Trace {
   scenario: string; seen: string[]; lists: Record<string, number>; ppr_new: number; faults: string[]; fixes: number;
-  latency_ms: number; cost_usd: number; model: string; prompt_version: string;
+  latency_ms: number; cost_usd: number; model: string; prompt_version: string; tool_calls?: number; models?: string[];
 }
 export interface Answer {
   schema_version: string; thread_id: string; status: AnswerStatus; risk: RiskLevel; as_of: string; summary: string;
@@ -59,3 +60,12 @@ export interface Stage {
 }
 export interface Pipeline { release_id: string; stages: Stage[]; }
 export const AREA_LABEL: Record<StageArea, string> = { corpus: 'Corpus', graph: 'Grafo', search: 'Búsqueda', agents: 'Agentes' };
+
+// Eventos del agente (Server-Sent Events de POST /answer/stream): cada uno trae `say`, una frase lista para mostrar.
+export interface StepItem { n: number; cita: string; vigente: boolean; fragmento: string; }
+export interface AgentEvent {
+  type: 'start' | 'plan' | 'think' | 'tool' | 'model' | 'draft' | 'verify' | 'deliver' | 'final' | 'error';
+  say?: string; ms?: number; name?: string; args?: Record<string, unknown>; summary?: string; items?: StepItem[];
+  complexity?: number; strategy?: string; budget?: number; model?: string; text?: string; ok?: boolean; faults?: string[];
+  from?: string; to?: string; reason?: string; status?: string; claims?: number; answer?: Answer; message?: string; scenario?: string;
+}

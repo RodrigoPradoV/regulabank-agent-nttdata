@@ -116,6 +116,18 @@ def numbers_in(text: str) -> set[str]:
     return out | {norm_number(x) for x in re.findall(r"\d+(?:[.,]\d+)*", text)}
 
 
+RX_NORM_NUMBER = re.compile(r"\b\d{1,6}\s?-\s?\d{4}\b")       # 2660-2015, 789-2018: el nombre de una norma no es una cifra
+RX_PREAMBLE = re.compile(r"^\s*(Buscaré|Leeré|Revisaré|Verificaré|Reformularé|Voy a|Primero|Ahora|Comparo|Compararé)\b[^\n]*\n+", re.I)
+
+
+def strip_preamble(text: str) -> str:
+    """Quita lineas iniciales de narracion («Buscaré…», «Leeré…»): la respuesta empieza por la respuesta."""
+    prev = None
+    while prev != text:
+        prev, text = text, RX_PREAMBLE.sub("", text, count=1)
+    return text.strip()
+
+
 def split_claims(text: str) -> list[tuple[str, list[int]]]:
     """Oraciones del texto con los [n] que citan."""
     out = []
@@ -124,6 +136,64 @@ def split_claims(text: str) -> list[tuple[str, list[int]]]:
         if sent.strip():
             out.append((sent.strip(), cites))
     return out
+
+
+def check(text: str, hits: list[Hit], scenario: str, as_of: str, finish_reason: str | None = None) -> list[Fault]:
+    """Todo en codigo: cada [n] existe, cada cifra esta en lo citado, no se cita lo no vigente sin decirlo."""
+    faults: list[Fault] = []
+    if finish_reason == "length":
+        faults.append({"kind": "truncated", "detail": "la respuesta se cortó por longitud"})
+    if text.startswith(NO_EVIDENCE):
+        return faults
+    claims = split_claims(text)
+    cited = {n for _, cs in claims for n in cs}
+    if not cited:
+        faults.append({"kind": "no_citation", "detail": "ninguna afirmación lleva cita [n]"})
+    for n in sorted(cited):
+        if not 1 <= n <= len(hits):
+            faults.append({"kind": "foreign_citation", "detail": f"[{n}] no es un fragmento dado"})
+    for sent, cs in claims:
+        nums = numbers_in(RX_NORM_NUMBER.sub("", re.sub(r"\[\d+\]", "", sent)))
+        if not nums or not cs:
+            continue
+        ok_nums: set[str] = set()
+        for n in cs:
+            if 1 <= n <= len(hits):
+                h = hits[n - 1]
+                ok_nums |= numbers_in(h.text) | numbers_in(f"{h.valid_from or ''} {h.valid_to or ''} {h.article_no or ''}")
+        missing = sorted(x for x in nums if x not in ok_nums and not (x.isdigit() and len(x) == 4 and x in as_of))
+        if missing:
+            faults.append({"kind": "foreign_fact", "detail": f"cifras {missing} no están en lo citado: «{sent[:90]}»"})
+    stale = [n for n in cited if 1 <= n <= len(hits) and not hits[n - 1].is_current]
+    if stale and scenario not in ("validity", "impact") and not re.search(
+            r"no vigente|sustituid|derogad|reemplaz|modificad|anterior|hasta el|dejó", text, re.I):
+        faults.append({"kind": "stale_citation", "detail": f"cita fragmentos no vigentes a {as_of}: {stale}"})
+    return faults
+
+
+def compose(text: str, hits: list[Hit], scenario: str, risk_rules: dict[str, str]) -> dict:
+    """Respuesta final: una cita por fragmento numerada 1..k en orden de aparicion (el texto se reescribe), riesgo y estado."""
+    if text.startswith(NO_EVIDENCE):
+        return {"status": "abstained", "risk": "auto", "claims": [], "summary": text}
+    sentences = split_claims(text)
+    cited = {n for _, cs in sentences for n in cs}
+    order: dict[int, int] = {}
+    claims: list[dict] = []
+    for sent, cs in sentences:
+        for n in cs:
+            if not 1 <= n <= len(hits):
+                continue
+            if n not in order:
+                order[n] = len(order) + 1
+                h = hits[n - 1]
+                claims.append({"text": re.sub(r"\s*\[\d+\]", "", sent), "chunk_id": h.chunk_id, "n": order[n], "quote": h.quote,
+                               "citation": h.citation, "valid_from": h.valid_from, "valid_to": h.valid_to,
+                               "is_current": h.is_current, "verified": h.quote_verified})
+    summary = re.sub(r"\[(\d+)\]", lambda m: f"[{order[int(m.group(1))]}]" if int(m.group(1)) in order else "", text)
+    level = risk_rules.get(scenario, "auto")
+    if any(1 <= n <= len(hits) and not hits[n - 1].is_current for n in cited) and scenario != "validity":
+        level = "approve"
+    return {"summary": summary, "claims": claims, "risk": level, "status": "pending_human" if level == "approve" else "ok"}
 
 
 @dataclass
@@ -185,37 +255,7 @@ class AnswerAgent:
         return {"text": reply.text, "usage": u, "fixes": s.get("fixes", 0) + (1 if s.get("faults") else 0)}
 
     def verify(self, s: State) -> State:
-        """Todo en codigo: cada [n] existe, cada cifra esta en lo citado, no se cita lo no vigente sin decirlo."""
-        text, hits, faults = s["text"], s["hits"], []
-        if finish := s.get("usage", {}).get("finish_reason"):
-            if finish == "length":
-                faults.append({"kind": "truncated", "detail": "la respuesta se cortó por longitud"})
-        if text.startswith(NO_EVIDENCE):
-            return {"faults": faults}
-        claims = split_claims(text)
-        cited = {n for _, cs in claims for n in cs}
-        if not cited:
-            faults.append({"kind": "no_citation", "detail": "ninguna afirmación lleva cita [n]"})
-        for n in sorted(cited):
-            if not 1 <= n <= len(hits):
-                faults.append({"kind": "foreign_citation", "detail": f"[{n}] no es un fragmento dado"})
-        for sent, cs in claims:
-            nums = numbers_in(re.sub(r"\[\d+\]", "", sent))
-            if not nums or not cs:
-                continue
-            ok_nums: set[str] = set()
-            for n in cs:
-                if 1 <= n <= len(hits):
-                    h = hits[n - 1]
-                    ok_nums |= numbers_in(h.text) | numbers_in(f"{h.valid_from or ''} {h.valid_to or ''} {h.article_no or ''}")
-            missing = sorted(x for x in nums if x not in ok_nums and not (x.isdigit() and len(x) == 4 and x in s["as_of"]))
-            if missing:
-                faults.append({"kind": "foreign_fact", "detail": f"cifras {missing} no están en lo citado: «{sent[:90]}»"})
-        stale = [n for n in cited if 1 <= n <= len(hits) and not hits[n - 1].is_current]
-        if stale and s["scenario"] not in ("validity", "impact") and not re.search(
-                r"no vigente|sustituid|derogad|reemplaz|modificad|anterior|hasta el|dejó", text, re.I):
-            faults.append({"kind": "stale_citation", "detail": f"cita fragmentos no vigentes a {s['as_of']}: {stale}"})
-        return {"faults": faults}
+        return {"faults": check(s["text"], s["hits"], s["scenario"], s["as_of"], s.get("usage", {}).get("finish_reason"))}
 
     def after_verify(self, s: State) -> str:
         if not s["faults"]:
@@ -225,35 +265,8 @@ class AnswerAgent:
     def after_grade(self, s: State) -> str:
         return "abstain" if s["grade"] == "no_evidence" else "answer"
 
-    def _risk(self, s: State, cited: set[int]) -> str:
-        level = self.risk_rules.get(s["scenario"], "auto")
-        if any(1 <= n <= len(s["hits"]) and not s["hits"][n - 1].is_current for n in cited) and s["scenario"] not in ("validity",):
-            level = "approve"
-        return level
-
     def deliver(self, s: State) -> State:
-        text = s["text"]
-        if text.startswith(NO_EVIDENCE):
-            return {"status": "abstained", "risk": "auto", "claims": [], "summary": text}
-        sentences = split_claims(text)
-        cited = {n for _, cs in sentences for n in cs}
-        # Una cita por fragmento, numerada 1..k en el orden en que aparece; el texto se reescribe con esos numeros.
-        order: dict[int, int] = {}
-        claims: list[dict] = []
-        for sent, cs in sentences:
-            for n in cs:
-                if not 1 <= n <= len(s["hits"]):
-                    continue
-                if n not in order:
-                    order[n] = len(order) + 1
-                    h = s["hits"][n - 1]
-                    claims.append({"text": re.sub(r"\s*\[\d+\]", "", sent), "chunk_id": h.chunk_id, "n": order[n], "quote": h.quote,
-                                   "citation": h.citation, "valid_from": h.valid_from, "valid_to": h.valid_to,
-                                   "is_current": h.is_current, "verified": h.quote_verified})
-        summary = re.sub(r"\[(\d+)\]", lambda m: f"[{order[int(m.group(1))]}]" if int(m.group(1)) in order else "", text)
-        risk = self._risk(s, cited)
-        return {"summary": summary, "claims": claims, "risk": risk,
-                "status": "pending_human" if risk == "approve" else "ok"}
+        return compose(s["text"], s["hits"], s["scenario"], self.risk_rules)
 
     def abstain(self, s: State) -> State:
         best = s["hits"][0].citation if s.get("hits") else None

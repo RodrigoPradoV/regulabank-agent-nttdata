@@ -1,5 +1,12 @@
-.cols { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2.2fr) minmax(220px, 1fr); gap: var(--spacing-md); align-items: start;
+.cols { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(0, 2.2fr) minmax(240px, 1fr); gap: var(--spacing-md); align-items: start;
   @media (max-width: 1100px) { grid-template-columns: 1fr; } }
-.side { min-height: 320px; }
-.center .panel-caption { color: var(--text-tertiary); }
-.empty { flex: 1; min-height: 220px; border: 1.5px dashed rgba(0, 0, 0, 0.1); border-radius: 16px; display: flex; align-items: center; justify-content: center; text-align: center; padding: var(--spacing-lg); color: var(--text-tertiary); font-size: var(--font-size-sm); line-height: 1.5; }
+.legend { display: flex; gap: 16px; font-size: var(--font-size-sm); color: var(--text-secondary); flex-wrap: wrap;
+  span { display: inline-flex; align-items: center; gap: 6px; } i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; } }
+.metrics { margin: 0; display: flex; flex-direction: column; gap: 14px;
+  div { display: flex; flex-direction: column; } dt { font-size: var(--font-size-xl); font-weight: var(--font-weight-semibold); letter-spacing: -0.02em; }
+  dd { margin: 0; font-size: var(--font-size-sm); color: var(--text-secondary); } }
+.decides { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column;
+  li { padding: 12px 0; border-bottom: 1px solid var(--border-light); &:last-child { border-bottom: none; } div { display: flex; justify-content: space-between; align-items: center; gap: 8px; } b { font-weight: var(--font-weight-semibold); }
+    p { margin: 4px 0 0; font-size: var(--font-size-sm); color: var(--text-secondary); line-height: 1.45; } }
+  .who { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); padding: 2px 9px; border-radius: var(--radius-full); background: var(--bg-secondary); color: var(--text-secondary); &.model { background: var(--status-pending-bg); color: #b25e00; } } }
+.panel-caption.agent { color: #b25e00; }

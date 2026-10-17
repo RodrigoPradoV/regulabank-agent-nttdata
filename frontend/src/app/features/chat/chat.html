@@ -3,7 +3,7 @@
     <div>
       <p class="page-kicker">Asistente</p>
       <h1 class="page-title">Consulta normativa</h1>
-      <p class="page-subtitle">Cada afirmación lleva cita literal verificada y vigencia a la fecha indicada.</p>
+      <p class="page-subtitle">Un agente que busca en las 17 normas, lee, verifica cada cita y te cuenta lo que hace mientras responde.</p>
     </div>
     <label class="asof">
       <span class="muted">Vigencia al</span>
@@ -20,54 +20,90 @@
         </div>
       </div>
     }
-    @for (t of turns(); track $index) {
+    @for (t of turns(); track $index; let i = $index) {
       @if (t.role === 'user') {
         <div class="bubble user">{{ t.text }}</div>
       } @else {
-        <div class="bubble assistant">
-          @if (t.answer; as a) {
-            <div class="answer-head">
-              <span class="pill" [class]="'pill ' + (a.status === 'ok' ? 'ok' : a.status === 'abstained' ? 'warn' : 'danger')">{{ statusLabel(a.status) }}</span>
-              <span class="pill" [class]="'pill ' + riskClass(a.risk)">{{ riskLabel(a.risk) }}</span>
-              <span class="muted mono">as_of {{ a.as_of }} · {{ a.trace.scenario }} · {{ a.trace.latency_ms }} ms · {{ a.trace.cost_usd }} USD</span>
-            </div>
-            <p class="answer-text">{{ a.summary }}</p>
-            @for (c of a.claims; track c.chunk_id; let i = $index) {
-              <div class="claim">
-                <p class="quote"><b class="ref">[{{ i + 1 }}]</b> «{{ c.quote }}»</p>
-                <div class="claim-foot">
-                  <button class="cite" (click)="shelf.openArticle(c.article_id)"><app-icon name="bookmark-simple" size="xs" /> {{ c.citation }}</button>
-                  <span class="pill" [class.ok]="c.verified" [class.danger]="!c.verified">{{ c.verified ? 'cita verificada' : 'cita no verificada' }}</span>
-                </div>
-              </div>
+        <div class="reply">
+          @if (t.steps.length) {
+            <button class="steps-toggle" (click)="toggle(i)">
+              <app-icon [name]="t.done ? 'check-circle' : 'circle-notch'" size="sm" [class.spin]="!t.done" />
+              <span>{{ t.done ? 'Cómo lo resolvió' : 'Trabajando…' }} · {{ t.steps.length }} pasos</span>
+              <app-icon [name]="t.open ? 'caret-up' : 'caret-down'" size="xs" />
+            </button>
+            @if (t.open) {
+              <ol class="steps">
+                @for (s of t.steps; track $index) {
+                  <li class="step" [class.bad]="s.kind === 'verify' && s.ok === false">
+                    <app-icon [name]="icon(s)" size="sm" />
+                    <div class="step-body">
+                      <p>{{ s.say }}</p>
+                      @if (s.items.length) {
+                        <div class="step-items">
+                          @for (it of s.items.slice(0, 4); track it.n) { <span class="mini" [class.old]="!it.vigente"><b>{{ it.n }}</b> {{ it.cita }}</span> }
+                        </div>
+                      }
+                    </div>
+                    <span class="step-ms muted">{{ seconds(s.ms) }}</span>
+                  </li>
+                }
+              </ol>
             }
-            @if (a.history.length) {
-              <div class="history">
-                <p class="section-label">Historia del artículo</p>
-                @for (h of a.history; track h.citation) {
-                  <div class="history-item"><span class="pill">{{ h.change_kind }}</span> <span>{{ h.citation }}</span> @if (h.changed_by) { <span class="muted mono">por {{ h.changed_by }}</span> }</div>
+          }
+
+          @if (t.error) { <p class="error">{{ t.error }}</p> }
+
+          @if (t.answer; as a) {
+            @if (a.status !== 'ok') {
+              <p><span class="pill" [class]="'pill ' + (a.status === 'abstained' ? 'warn' : 'danger')">{{ statusLabel(a.status) }}</span></p>
+            }
+            <div class="answer">
+              @for (p of parts(a.summary); track $index) {
+                @if (p.n) { <button class="chip" [class.on]="t.active === p.n" (click)="focus(i, p.n)" [title]="claim(a, p.n)?.citation?.split('{')?.pop()">{{ p.n }}</button> }
+                @else { <span>{{ p.t }}</span> }
+              }
+            </div>
+
+            @if (a.claims.length) {
+              <div class="sources">
+                @for (c of a.claims; track c.chunk_id) {
+                  <button class="source" [class.on]="t.active === c.n" (click)="focus(i, c.n!)">
+                    <b>{{ c.n }}</b><span>{{ c.norm_short }}@if (c.article_no) { · art. {{ c.article_no }} }</span>
+                    @if (c.is_current === false) { <i class="old">no vigente</i> }
+                  </button>
                 }
               </div>
+              @if (t.active; as n) {
+                @if (claim(a, n); as c) {
+                  <blockquote class="quote">
+                    <p>{{ c.quote }}</p>
+                    <footer>
+                      <span>{{ c.norm_short }}@if (c.article_no) { , art. {{ c.article_no }} }@if (pages(c)) { , {{ pages(c) }} } · {{ vigencia(c) }}</span>
+                      @if (c.verified) { <span class="ok"><app-icon name="seal-check" size="xs" /> cita literal verificada</span> }
+                      <button class="link" (click)="shelf.openArticle(c.article_id)">Abrir artículo</button>
+                    </footer>
+                  </blockquote>
+                }
+              }
             }
+
             @if (a.status === 'pending_human') {
               <div class="hitl">
                 <app-icon name="hand-palm" size="sm" />
-                <span>Esta respuesta cita una versión no vigente a la fecha pedida: queda en cola para aprobación humana.</span>
-                <button class="btn btn-primary btn-sm">Aprobar</button>
-                <button class="btn btn-secondary btn-sm">Rechazar</button>
+                <span>La respuesta toca una versión no vigente o una contradicción: queda para revisión de una persona.</span>
               </div>
             }
-          } @else {
-            <p>{{ t.text }}</p>
+            <p class="meta muted">{{ models(a) }} · {{ a.trace.tool_calls }} consultas · {{ seconds(a.trace.latency_ms) }} · {{ usd(a.trace.cost_usd) }} USD · vigencia al {{ a.as_of }}</p>
+          } @else if (t.draft) {
+            <p class="answer draft">{{ t.draft }}</p>
           }
         </div>
       }
     }
-    @if (busy()) { <div class="bubble assistant muted">Buscando y verificando…</div> }
   </div>
 
   <form class="composer" (submit)="$event.preventDefault(); ask()">
-    <input class="input" placeholder="Pregunta sobre una norma o política interna" [value]="draft()" (input)="draft.set($any($event.target).value)" [disabled]="busy()" />
+    <input class="input" placeholder="Pregunta sobre una norma" [value]="draft()" (input)="draft.set($any($event.target).value)" [disabled]="busy()" />
     <button class="btn btn-primary" type="submit" [disabled]="busy() || !draft().trim()"><app-icon name="paper-plane-tilt" size="sm" /> Preguntar</button>
   </form>
 </div>

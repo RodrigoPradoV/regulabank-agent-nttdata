@@ -37,6 +37,15 @@ from regulabank.graphs.edges import idf
 from regulabank.graphs.entities import NormAliases, _sentence_bounds, extract_norm_refs, norm_key
 
 
+# Defectos de extraccion de PDF (auditoria 2026-10-17): ligaturas (eﬀective), guion blando U+00AD en palabras y NUL de simbolos.
+_FIX = {0xFB00: "ff", 0xFB01: "fi", 0xFB02: "fl", 0xFB03: "ffi", 0xFB04: "ffl", 0xFB05: "st", 0xFB06: "st", 0x00AD: None, 0x0000: None}
+
+
+def clean_text(text: str) -> str:
+    """Normaliza lo que el PDF dejo roto sin tocar el parquet del corpus; citas y busqueda usan este mismo texto."""
+    return text.translate(_FIX)
+
+
 def _norm_text(text: str) -> str:
     return " ".join(text.lower().split())
 
@@ -113,7 +122,7 @@ class Retriever:
         self.entities = pq.read_table(release / "entities.parquet")
         self.mentions = pq.read_table(release / "mentions.parquet")
         self.edges = pq.read_table(release / "edges.parquet")
-        self.rows = {r["chunk_id"]: r for r in self.chunks.to_pylist()}
+        self.rows = {r["chunk_id"]: {**r, "text": clean_text(r["text"])} for r in self.chunks.to_pylist()}
         self.order = list(self.rows)
         self.graph = ppr_mod.build_graph(self.chunks, self.entities, self.edges)
         import lancedb  # noqa: PLC0415
@@ -209,6 +218,17 @@ class Retriever:
             for rank, cid in enumerate(ids, start=1):
                 score[cid] += w / (rrf + rank)
         return sorted(score.items(), key=lambda kv: -kv[1])[:limit]
+
+    def hit(self, cid: str, as_of: str, score: float = 0.0, quote: str | None = None) -> Hit:
+        """Un Hit para un chunk que no vino de `search` (vecinos, citas, conflictos)."""
+        row = self.rows[cid]
+        q = quote or row["text"][:int(self.p["quote_max_chars"])].strip()
+        return Hit(chunk_id=cid, norm_id=row["norm_id"], norm_short=row["norm_short"], article_no=row["article_no"],
+                   path=row["parent_path"], citation=self.cite(row, q), text=row["text"], quote=q,
+                   quote_verified=verify_quote(q, row["text"]), score=score, sources={}, valid_from=row["valid_from"],
+                   valid_to=row["valid_to"], is_current=self._current(row, as_of), history=[],
+                   refers_to=self.refers.get(cid, []),
+                   entities=sorted(self.entities_of.get(cid, []), key=lambda e: -self.idf.get(e, 0.0))[:8])
 
     def hop(self, chunk_ids: list[str], limit: int) -> list[str]:
         """Salto por citas: los chunks de los articulos que citan los mejores y los chunks que citan a esos articulos."""

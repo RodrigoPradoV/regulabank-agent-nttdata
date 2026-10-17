@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, input, viewChild } from '@angular/core';
 import * as d3 from 'd3';
 
-export interface FlowStep { id: string; phase: string; label: string; tool: string; brief: string; }
+export interface FlowStep { id: string; phase: string; label: string; tool: string; brief: string; accent?: string; filled?: boolean; }
 
 const NW = 440, NH = 112, GAP = 26, PHASE = 44, X0 = 40, TOP = 4, WRAP = 58;
 
@@ -39,15 +39,18 @@ export class Flowchart {
     svg.append('defs').append('marker').attr('id', 'arrow').attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5).attr('markerWidth', 7).attr('markerHeight', 7).attr('orient', 'auto')
       .append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', '#c7c7cc');
     const phases = rows.filter(r => r.phaseY !== null);
-    svg.append('g').selectAll('text').data(phases).join('text').attr('class', 'phase').attr('x', X0).attr('y', r => r.phaseY! + 18).attr('fill', '#86868b').text(r => r.s.phase.toUpperCase());
+    svg.append('g').selectAll('text').data(phases).join('text').attr('class', 'phase').attr('x', X0).attr('y', r => r.phaseY! + 18).attr('fill', r => r.s.accent ?? '#86868b').text(r => r.s.phase.toUpperCase());
     svg.append('g').selectAll('line').data(rows.slice(1)).join('line')
       .attr('x1', X0 + NW / 2).attr('x2', X0 + NW / 2).attr('y1', (_r, i) => rows[i].y + NH).attr('y2', (_r, i) => rows[i].y + NH)
       .attr('stroke', '#c7c7cc').attr('stroke-width', 1.5).attr('marker-end', 'url(#arrow)')
       .transition().duration(360).delay((_r, i) => 70 * i + 160).ease(d3.easeCubicOut).attr('y2', r => r.y - 2);
     const node = svg.append('g').selectAll('g').data(rows).join('g').attr('class', 'node').attr('transform', r => `translate(${X0},${r.y})`).attr('opacity', 0);
     node.transition().duration(380).delay((_r, i) => 70 * i).attr('opacity', 1);
-    node.append('rect').attr('class', 'box').attr('width', NW).attr('height', NH).attr('rx', 20).attr('fill', '#fff').attr('stroke', 'rgba(0,0,0,0.06)');
-    node.append('text').attr('class', 'num').attr('x', 24).attr('y', 44).attr('fill', '#d4d4d4').text((_r, i) => String(i + 1).padStart(2, '0'));
+    node.append('rect').attr('class', 'box').attr('width', NW).attr('height', NH).attr('rx', 20)
+      .attr('fill', r => (r.s.filled && r.s.accent ? d3.color(r.s.accent)!.copy({ opacity: 0.09 }).formatRgb() : '#fff'))
+      .attr('stroke', r => (r.s.filled && r.s.accent ? d3.color(r.s.accent)!.copy({ opacity: 0.45 }).formatRgb() : 'rgba(0,0,0,0.06)'));
+    node.filter(r => !!r.s.accent).append('rect').attr('class', 'bar').attr('x', 0).attr('y', 18).attr('width', 5).attr('height', NH - 36).attr('rx', 2.5).attr('fill', r => r.s.accent!);
+    node.append('text').attr('class', 'num').attr('x', 26).attr('y', 44).attr('fill', r => r.s.accent ?? '#d4d4d4').attr('opacity', r => (r.s.accent ? 0.85 : 1)).text((_r, i) => String(i + 1).padStart(2, '0'));
     node.append('text').attr('class', 'title').attr('x', 78).attr('y', 38).text(r => r.s.label);
     node.append('text').attr('class', 'tool').attr('x', 78).attr('y', 56).attr('fill', '#86868b').text(r => r.s.tool);
     node.append('text').attr('class', 'brief').attr('x', 78).attr('y', 80).attr('fill', '#515154')

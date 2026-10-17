@@ -88,8 +88,41 @@ class SentenceTransformerEmbedder:
         return _normalize(np.asarray(vectors, dtype=np.float32))
 
 
+class OpenAIEmbedder:
+    """Embeddings por la API de OpenAI (httpx): el servidor no carga torch ni un modelo de 1,2 GB. Sin prefijos."""
+
+    def __init__(self, model_name: str = "openai:text-embedding-3-small", batch_size: int = 256):
+        import httpx  # noqa: PLC0415
+
+        from regulabank.shared.secrets import api_key  # noqa: PLC0415
+
+        self.name = model_name
+        self.api_model = model_name.split(":", 1)[1]
+        self.batch_size = batch_size
+        self.http = httpx.Client(base_url="https://api.openai.com/v1", headers={"Authorization": f"Bearer {api_key()}"}, timeout=120)
+        self.dim = 1536 if "small" in self.api_model else 3072
+
+    def doc_prefix(self, norm_short: str, article_no: str) -> str:
+        return f"{norm_short}, art. {article_no}. " if norm_short else ""
+
+    def query_prefix(self) -> str:
+        return ""
+
+    def encode(self, texts: list[str]) -> np.ndarray:
+        out: list[list[float]] = []
+        for i in range(0, len(texts), self.batch_size):
+            batch = [t.replace("\n", " ")[:24000] or " " for t in texts[i:i + self.batch_size]]
+            r = self.http.post("/embeddings", json={"model": self.api_model, "input": batch})
+            if r.status_code != 200:
+                raise RuntimeError(f"OpenAI embeddings {r.status_code}: {r.text[:300]}")
+            out.extend(d["embedding"] for d in sorted(r.json()["data"], key=lambda d: d["index"]))
+        return _normalize(np.asarray(out, dtype=np.float32))
+
+
 def load_embedder(model_name: str, fallback: str, batch_size: int = 32, device: str | None = None) -> Embedder:
     """Carga el modelo principal; si falla (gated, sin red, sin pesos), carga el repuesto y lo registra."""
+    if model_name.startswith("openai:"):
+        return OpenAIEmbedder(model_name)
     try:
         return SentenceTransformerEmbedder(model_name, batch_size, device)
     except ImportError:

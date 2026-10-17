@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from regulabank.api import contracts as c
@@ -50,14 +51,23 @@ def answer(req: c.AnswerRequest) -> c.Answer:
     return live.answer(req) if live else mock.answer(req)
 
 
+@app.post("/answer/stream")
+def answer_stream(req: c.AnswerRequest) -> StreamingResponse:
+    """Los pasos del agente (busca, lee, verifica, responde) como Server-Sent Events; el ultimo, `final`, trae la respuesta."""
+    if live is None:
+        raise HTTPException(501, "el agente con herramientas necesita REGULABANK_RELEASE")
+    return StreamingResponse(live.stream(req), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
 @app.get("/conflicts", response_model=list[c.Conflict])
 def conflicts() -> list[c.Conflict]:
-    return mock.conflicts()
+    return live.conflicts() if live else mock.conflicts()
 
 
 @app.post("/conflicts/{conflict_id}/decide", response_model=c.Conflict)
 def decide(conflict_id: str, decision: c.Decision) -> c.Conflict:
-    cf = mock.decide(conflict_id, decision)
+    cf = live.decide(conflict_id, decision) if live else mock.decide(conflict_id, decision)
     if cf is None:
         raise HTTPException(404, "conflicto no encontrado")
     return cf

@@ -1,0 +1,22 @@
+[Unit]
+Description=regulabank API (FastAPI + agente, puerto 3320)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/regulabank/backend
+EnvironmentFile=/etc/regulabank.env
+ExecStart=/opt/regulabank/venv/bin/uvicorn regulabank.api.app:app --host 127.0.0.1 --port 3320 --workers 1
+Restart=on-failure
+RestartSec=5
+# El droplet corre el ERP de capitalfoods con ~1,8 GB libres: este servicio no puede tumbarlo.
+MemoryMax=900M
+MemoryHigh=700M
+Nice=10
+StandardOutput=append:/var/log/regulabank/api.log
+StandardError=append:/var/log/regulabank/api.log
+
+[Install]
+WantedBy=multi-user.target
