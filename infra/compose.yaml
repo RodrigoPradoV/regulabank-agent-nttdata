@@ -1,0 +1,49 @@
+# Infraestructura local de regulabank: FalkorDB (grafo) + app (Python con LanceDB embebido).
+# LanceDB no es un servidor: es una libreria que escribe en data/views/<release>/lancedb.
+#
+#   docker-compose -f infra/compose.yaml up -d falkordb      # solo el grafo
+#   docker-compose -f infra/compose.yaml run --rm app        # prueba de humo (Lance + Falkor)
+#   docker-compose -f infra/compose.yaml --profile ui up -d  # FalkorDB con su UI en http://127.0.0.1:3011
+
+name: regulabank
+
+services:
+  falkordb:
+    # v4.22.0 fijada: la serie 6.x (Rust) entra en panico con tildes en el slow_log.
+    image: falkordb/falkordb:v4.22.0
+    container_name: regulabank-falkordb
+    ports:
+      - "127.0.0.1:6381:6379"
+      - "127.0.0.1:3011:3000"
+    volumes:
+      - falkor-data:/data
+    command: ["redis-server", "--loadmodule", "/var/lib/falkordb/bin/falkordb.so", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    image: regulabank-app:dev
+    container_name: regulabank-app
+    depends_on:
+      falkordb:
+        condition: service_healthy
+    environment:
+      FALKOR_HOST: falkordb
+      FALKOR_PORT: "6379"
+      FALKOR_GRAPH: regulabank
+      LANCE_DIR: /app/data/views/current/lancedb
+      MODEL_PROVIDER: mock
+      HF_HOME: /app/data/hf
+    volumes:
+      - ..:/app
+    working_dir: /app
+    command: ["python", "scripts/smoke.py"]
+
+volumes:
+  falkor-data:

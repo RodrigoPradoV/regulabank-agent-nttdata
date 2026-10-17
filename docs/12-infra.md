@@ -8,7 +8,7 @@
 | Orquestación | `langgraph >= 1.2, < 1.3` | `SqliteSaver` en `data/state/checkpoints.sqlite`, no en la base del corpus |
 | LLM | `anthropic` (Claude) o Azure OpenAI; `FakeProvider` siempre disponible | `MODEL_PROVIDER=mock|anthropic|azure_openai`; claves solo por variable de entorno |
 | Vectores + léxico | LanceDB ≥ 0.20 (FTS en español nativo) | un directorio por release: `data/views/<release>/lancedb` |
-| Grafo | FalkorDB **v4.22.0** en Docker, puerto 6380 | la 6.x en Rust entra en pánico con tildes en el slow_log; fijar la versión |
+| Grafo | FalkorDB **v4.22.0** en Docker, puerto 6381 | la 6.x en Rust entra en pánico con tildes en el slow_log; fijar la versión |
 | PageRank | `scipy.sparse` en memoria | cargado al arrancar el servicio de búsqueda |
 | Modelos | `sentence-transformers ≥ 6`, `transformers ≥ 5`, `torch ≥ 2.14`, `gliner2`, `wtpsplit` | descarga a caché local; sin GPU para la demo |
 | PDF | `pymupdf`; OCR `tesseract` solo si la página es imagen | |
@@ -24,7 +24,7 @@
 services:
   falkordb:
     image: falkordb/falkordb:v4.22.0
-    ports: ["6380:6379", "3010:3000"]
+    ports: ["127.0.0.1:6381:6379", "127.0.0.1:3011:3000"]
     volumes: ["./data/falkor:/data"]
 ```
 
@@ -36,7 +36,7 @@ Perfiles: `local` (todo en la laptop, mock), `cloud` (proveedor real), `graph` (
 MODEL_PROVIDER=mock
 ANTHROPIC_API_KEY=            # solo si provider=anthropic
 AZURE_OPENAI_ENDPOINT= / AZURE_OPENAI_API_KEY= / AZURE_OPENAI_DEPLOYMENT=
-FALKOR_HOST=127.0.0.1  FALKOR_PORT=6380  FALKOR_GRAPH=regulabank
+FALKOR_HOST=127.0.0.1  FALKOR_PORT=6381  FALKOR_GRAPH=regulabank
 LANCE_DIR=data/views/current/lancedb
 RELEASE_ID=current
 BUDGET_USD_PER_RUN=2.0
