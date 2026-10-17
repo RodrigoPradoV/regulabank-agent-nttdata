@@ -23,7 +23,7 @@ export class Topbar {
     const first = '/' + url.split('/').filter(Boolean)[0];
     for (const m of NAVIGATION) {
       const item = m.items.find(i => i.path === first);
-      if (item) { return url.split('/').filter(Boolean).length > 1 ? [m.label, item.label, 'Detalle'] : [m.label, item.label]; }
+      if (item) { const parts = url.split('/').filter(Boolean); return parts.length > 1 ? [m.label, item.label, first === '/flow' ? 'Etapa' : 'Detalle'] : [m.label, item.label]; }
     }
     return ['regulabank'];
   });
