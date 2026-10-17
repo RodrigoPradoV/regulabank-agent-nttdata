@@ -1,0 +1,9 @@
+# Dependencias del job de GPU (backend/pod/job.py). torch viene en la imagen del pod; si no, se instala la rueda
+# CUDA de torch segun la imagen (ver README.md). El paquete regulabank se instala aparte con `uv pip install -e .`
+# o job.py lo toma del repo por ruta.
+torch>=2.3
+gliner2
+sentence-transformers>=3.0
+transformers>=4.44
+pyarrow>=17
+numpy>=1.26
