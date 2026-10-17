@@ -3,7 +3,7 @@ export interface NavModule { label: string; items: NavItem[]; }
 
 export const NAVIGATION: NavModule[] = [
   { label: 'Flujo', items: [
-    { path: '/flow', label: 'Cómo responde el agente', icon: 'flow-arrow' },
+    { path: '/flow', label: 'Arquitectura', icon: 'flow-arrow' },
   ]},
   { label: 'Normativa', items: [
     { path: '/norms', label: 'Textos', icon: 'books' },
