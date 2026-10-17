@@ -84,16 +84,25 @@ def test_complejidad_3_empieza_con_el_modelo_potente_y_mas_presupuesto():
     assert plan["model"] == "fake-strong" and plan["budget"] == 8 and plan["subquestions"] == ["a", "b"]
 
 
-def test_verificacion_falla_el_agente_corrige_y_escala_de_modelo():
+def test_primera_falla_se_corrige_con_el_mismo_modelo():
     a = agent([msg(None, call("plan", {"complexity": 1, "strategy": "direct", "reason": "r"})),
                msg(None, call("search", {"query": "x"}, 2)),
                msg("El plazo es de 48 horas [1]."),                       # cifra inventada
                msg("El plazo es de 24 horas [1].")])
     events, final = kinds(a)
     types = [e["type"] for e in events]
-    assert types.count("verify") == 2 and "model" in types
-    assert next(e for e in events if e["type"] == "model")["to"] == "fake-strong"
-    assert final["status"] == "ok" and final["fixes"] == 1
+    assert types.count("verify") == 2 and "model" not in types
+    assert final["status"] == "ok" and final["fixes"] == 1 and final["model"] == "fake-mini"
+
+
+def test_segunda_falla_escala_de_modelo():
+    a = agent([msg(None, call("plan", {"complexity": 1, "strategy": "direct", "reason": "r"})),
+               msg(None, call("search", {"query": "x"}, 2)),
+               msg("El plazo es de 48 horas [1]."), msg("El plazo es de 72 horas [1]."),
+               msg("El plazo es de 24 horas [1].")])
+    events, final = kinds(a)
+    ev = next(e for e in events if e["type"] == "model")
+    assert ev["to"] == "fake-strong" and final["status"] == "ok" and final["fixes"] == 2
 
 
 def test_sin_buscar_no_se_acepta_respuesta():

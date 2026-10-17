@@ -23,11 +23,13 @@ rsync -az --delete --exclude ledger.jsonl --exclude llm-cache "$RELEASE/" $H:/op
 echo "== 4. entorno (sin torch: los embeddings salen de la API de OpenAI)"
 ssh $H 'test -d /opt/regulabank/venv || python3 -m venv /opt/regulabank/venv; /opt/regulabank/venv/bin/pip install -q --upgrade pip; /opt/regulabank/venv/bin/pip install -q -e /opt/regulabank/backend'
 ssh $H 'test -f /etc/regulabank.env || { umask 077; printf "REGULABANK_RELEASE=/opt/regulabank/release\nMODEL_PROVIDER=openai\nEMBED_MODEL=openai:text-embedding-3-small\n" > /etc/regulabank.env; }'
-ssh $H 'grep -q ^OPENAI_API_KEY= /etc/regulabank.env' || { echo "FALTA OPENAI_API_KEY en /etc/regulabank.env (ver README de deploy)"; exit 3; }
+KEY_OK=1
+ssh $H 'grep -q ^OPENAI_API_KEY= /etc/regulabank.env' || { KEY_OK=0; echo "AVISO: falta OPENAI_API_KEY en /etc/regulabank.env; el servicio queda instalado sin arrancar (ver deploy/README.md)"; }
 
 echo "== 5. servicio"
 scp -q "$ROOT/deploy/regulabank-api.service" $H:/etc/systemd/system/regulabank-api.service
-ssh $H 'systemctl daemon-reload && systemctl enable --now regulabank-api && sleep 8 && systemctl is-active regulabank-api && curl -sf http://127.0.0.1:3320/health'
+ssh $H 'systemctl daemon-reload && systemctl enable regulabank-api'
+if [ "$KEY_OK" = 1 ]; then ssh $H 'systemctl restart regulabank-api && sleep 10 && systemctl is-active regulabank-api && curl -sf http://127.0.0.1:3320/health'; fi
 
 echo "== 6. nginx (copia de seguridad, prueba y recarga)"
 scp -q "$ROOT/deploy/nginx-regulabank.conf" $H:/tmp/nginx-regulabank.conf
@@ -42,5 +44,5 @@ PY
 
 echo "== 7. verificacion publica"
 curl -sf -o /dev/null -w "pagina %{http_code}\n" https://capitalfoods.studio/regulabank/
-curl -sf https://capitalfoods.studio/regulabank/api/health; echo
+if [ "$KEY_OK" = 1 ]; then curl -sf https://capitalfoods.studio/regulabank/api/health; echo; fi
 curl -s -o /dev/null -w "adexdatatrade sigue en %{http_code}\n" https://capitalfoods.studio/adexdatatrade/

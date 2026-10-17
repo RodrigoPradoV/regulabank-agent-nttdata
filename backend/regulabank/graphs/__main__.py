@@ -200,7 +200,16 @@ def main(argv: list[str] | None = None) -> int:
     k = sub.add_parser("conflicts-collect", help="nli_scores.parquet del pod -> release/conflicts.parquet")
     k.add_argument("--release", type=Path, required=True)
     k.add_argument("--scores", type=Path, required=True)
+    e = sub.add_parser("conflicts-edges", help="conflicts.parquet -> aristas CONTRADICTS en edges.parquet (y FalkorDB con --load)")
+    e.add_argument("--release", type=Path, required=True)
+    e.add_argument("--p-min", type=float, default=0.9, help="probabilidad minima de contradiccion para crear la arista")
+    e.add_argument("--load", action="store_true")
     args = parser.parse_args(argv)
+    if args.cmd == "conflicts-edges":
+        from regulabank.graphs import conflicts as conflicts_mod  # noqa: PLC0415
+
+        print(json.dumps(conflicts_mod.add_nli_edges(args.release, args.p_min, args.load), ensure_ascii=False, indent=2))
+        return 0
     if args.cmd in ("conflicts-prepare", "conflicts-collect"):
         from regulabank.graphs import conflicts as conflicts_mod  # noqa: PLC0415
 

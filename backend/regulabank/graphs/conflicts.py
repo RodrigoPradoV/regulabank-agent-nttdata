@@ -30,7 +30,7 @@ import pyarrow.compute as pc
 import pyarrow.parquet as pq
 
 from regulabank.graphs import params as params_mod  # noqa: F401 - reservado para parametros en seeds/params.toml
-from regulabank.graphs.edges import idf
+from regulabank.graphs.edges import _edge, idf
 from regulabank.graphs.entities import _sentence_bounds
 
 log = logging.getLogger("regulabank.graphs.conflicts")
@@ -213,3 +213,40 @@ def collect(release: Path, scores: Path) -> dict[str, Any]:
     for r in rows:
         labels[r["label"]] += 1
     return {"pairs": len(rows), "labels": dict(labels)}
+
+
+def nli_edges(conflicts: pa.Table, p_min: float) -> list[dict[str, Any]]:
+    """CONTRADICTS: una arista por par de chunks, con la oracion de mayor P(contradiccion) >= p_min como evidencia (literal)."""
+    best: dict[tuple[str, str], dict[str, Any]] = {}
+    for r in conflicts.to_pylist():
+        if r["label"] != "contradiction" or r["p_contradiction"] < p_min:
+            continue
+        key = (r["chunk_a"], r["chunk_b"])
+        if key not in best or r["p_contradiction"] > best[key]["p_contradiction"]:
+            best[key] = r
+    return [
+        _edge(a, "chunk", b, "chunk", "CONTRADICTS", r["p_contradiction"], "nli",
+              json.dumps({"entity": r["entity_id"], "premise": r["premise"], "hypothesis": r["hypothesis"],
+                          "p": {"contradiction": r["p_contradiction"], "neutral": r["p_neutral"], "entailment": r["p_entailment"]},
+                          "validated": False}, ensure_ascii=False))
+        for (a, b), r in best.items()
+    ]
+
+
+def add_nli_edges(release: Path, p_min: float, do_load: bool = False) -> dict[str, Any]:
+    """Reemplaza las aristas CONTRADICTS de release/edges.parquet con las del NLI y, si se pide, recarga FalkorDB."""
+    import pyarrow.compute as pc  # noqa: PLC0415
+
+    from regulabank.graphs import load as load_mod  # noqa: PLC0415
+    from regulabank.shared import config, schema  # noqa: PLC0415
+
+    edges = pq.read_table(release / "edges.parquet")
+    new = nli_edges(pq.read_table(release / "conflicts.parquet"), p_min)
+    kept = edges.filter(pc.not_equal(edges["type"], "CONTRADICTS"))
+    merged = pa.concat_tables([kept, pa.Table.from_pylist(new, schema=schema.EDGES)]) if new else kept
+    pq.write_table(merged, release / "edges.parquet")
+    out: dict[str, Any] = {"contradicts": len(new), "p_min": p_min, "edges_total": merged.num_rows}
+    if do_load:
+        chunks = pq.read_table(release / "chunks.parquet")
+        out["falkor"] = load_mod.load(chunks.select(schema.CHUNKS.names), pq.read_table(release / "entities.parquet"), merged, config.load())
+    return out

@@ -62,10 +62,11 @@ def main() -> int:
     p.add_argument("--write-route", type=Path, default=None)
     p.add_argument("--min-gain", type=float, default=0.05)
     p.add_argument("--device", default="mps")
+    p.add_argument("--embed-model", default="google/embeddinggemma-300m", help="o openai:text-embedding-3-small")
     a = p.parse_args()
 
     qs = list(csv.DictReader(open(a.questions, encoding="utf-8")))
-    emb = embed_mod.load_embedder("google/embeddinggemma-300m", "intfloat/multilingual-e5-small", 32, device=a.device)
+    emb = embed_mod.load_embedder(a.embed_model, "intfloat/multilingual-e5-small", 32, device=a.device)
     r = Retriever(a.release, emb, norms_csv=Path(__file__).resolve().parents[1] / "seeds" / "norms.csv")
     r.p["top_k"] = 10
     rows = r.rows

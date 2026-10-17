@@ -96,6 +96,7 @@ EDGE_TYPES = (
     "NEXT", "PARENT", "REFERS_TO", "SHARES_ENTITY", "SIMILAR",   # focus
     "MENTIONS",                                                   # lens
     "MODIFIES", "REPLACES", "REPEALS", "ADDS", "IMPLEMENTS",      # horizon / bridge
+    "CONTRADICTS",                                                # bridge: RoBERTa XNLI sobre pares coseno + entidad
 )
 
 # Una fila por arista. src/dst son chunk_id, entity_id, article_id o norm_id segun el tipo.
@@ -106,6 +107,6 @@ EDGES = pa.schema([
     ("dst_kind", pa.string()),
     ("type", pa.string()),             # EDGE_TYPES
     ("weight", pa.float32()),
-    ("method", pa.string()),           # structure | regex | knn | shared_entity | seed
+    ("method", pa.string()),           # structure | regex | knn | shared_entity | seed | nli
     ("evidence", pa.string()),         # tramo literal o JSON con la razon
 ])

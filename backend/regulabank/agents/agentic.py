@@ -31,7 +31,7 @@ from regulabank.graphs import embed as embed_mod
 from regulabank.retrieval.search import Hit, Retriever, verify_quote
 
 MAX_CALLS = 6
-PROMPT_VERSION = "agentic-v5"
+PROMPT_VERSION = "agentic-v6"
 CALLS_BY_COMPLEXITY = {1: 3, 2: 5, 3: 8}      # presupuesto de herramientas segun la complejidad que el agente se asigna
 READ_CLIP = 2400
 
@@ -39,7 +39,7 @@ SYSTEM = """Eres un analista de cumplimiento normativo bancario del Perú. Tiene
 de 17 normas reales (SBS, BCBS, GAFI, UE, decretos). Trabaja así:
 0. Tu primer paso es SIEMPRE `plan` (una sola vez): evalúa la complejidad y elige la estrategia.
 1. Antes de cada llamada a una herramienta escribe UNA línea corta que diga qué vas a hacer y por qué (el usuario la ve).
-2. Empieza siempre con `search`. Si los resultados no alcanzan, reformula y busca otra vez (sinónimos, el término definido, \
+2. Empieza siempre con `search`. Cada búsqueda es una frase corta y natural (6 a 12 palabras), sin comillas ni listas de palabras clave. Si los resultados no alcanzan, reformula y busca otra vez (sinónimos, el término definido, \
 el número de la norma); si la pregunta nombra una norma, busca con `norm_id`.
 3. Usa `read` para leer el texto completo antes de citar una cifra o un plazo.
 4. Usa `refers_to` si el texto remite a otro artículo, `neighbors` si el texto continúa, `conflicts` si preguntan si dos \
@@ -390,11 +390,13 @@ class AgenticAgent:
     def fix(self, s: State) -> State:
         note = "Tu respuesta tuvo estas faltas; corrígelas (puedes usar más herramientas). Responde SOLO con la respuesta final, sin preámbulo ni explicar qué cambiaste:\n" + "\n".join(
             f"- {f['kind']}: {f['detail']}" for f in s["faults"])
-        strong, events = self.models[-1], []
-        if s.get("model") != strong:
-            events.append({"type": "model", "from": s.get("model"), "to": strong, "reason": "la verificación encontró faltas"})
+        # El primer intento de corregir se hace con el mismo modelo (barato); solo la segunda falla escala al potente.
+        strong, events, model = self.models[-1], [], s.get("model")
+        if s.get("fixes", 0) >= 1 and model != strong:
+            events.append({"type": "model", "from": model, "to": strong, "reason": "la verificación falló dos veces"})
+            model = strong
         return {"messages": s["messages"] + [{"role": "user", "content": note}], "fixes": s.get("fixes", 0) + 1,
-                "events": events, "model": strong}
+                "events": events, "model": model}
 
     def deliver(self, s: State) -> State:
         """Citas literales: para cada fragmento citado, la oracion con mayor coseno a la pregunta (tramo verificado)."""
