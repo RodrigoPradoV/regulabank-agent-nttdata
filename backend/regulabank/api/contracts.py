@@ -106,6 +106,7 @@ class Answer(BaseModel):
     claims: list[Claim]
     history: list[HistoryItem]
     trace: Trace
+    follow_ups: list[str] = Field(default_factory=list)   # preguntas que el agente propone para seguir
 
 
 class Conflict(BaseModel):

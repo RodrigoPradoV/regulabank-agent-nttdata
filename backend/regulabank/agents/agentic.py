@@ -31,7 +31,7 @@ from regulabank.graphs import embed as embed_mod
 from regulabank.retrieval.search import Hit, Retriever, verify_quote
 
 MAX_CALLS = 6
-PROMPT_VERSION = "agentic-v6"
+PROMPT_VERSION = "agentic-v8"
 CALLS_BY_COMPLEXITY = {1: 3, 2: 5, 3: 8}      # presupuesto de herramientas segun la complejidad que el agente se asigna
 READ_CLIP = 2400
 
@@ -50,10 +50,12 @@ resolver una contradicción o razonar sobre vigencias entre versiones, llama `es
 herramientas). Toda cifra debe estar en el fragmento citado. Prefiere fragmentos vigentes a la fecha de consulta; uno NO \
 vigente úsalo solo para explicar cómo cambió la norma, y dilo.
 7. Si no hay sustento, empieza con «No encontré sustento en el corpus» y di en una línea qué es lo más cercano.
-Estilo: español natural, como un colega experto que explica a otro: la respuesta directa primero y después el detalle que importa, \
-en prosa corrida, sin etiquetas, sin encabezados y sin preámbulo («Buscaré…», «Respuesta directa:»). La respuesta final empieza por la \
-respuesta. No digas «fragmento», «pasaje» ni «según el texto»; pon la cita [n] al final de la frase que la usa, sin repetir la pregunta ni \
-enumerar. Texto plano, máximo 180 palabras."""
+Estilo: escribe como un asesor que le explica el tema a un colega, en prosa narrativa: dos o tres párrafos cortos, conectados. \
+Abre con la respuesta en una frase natural, nunca con una etiqueta («Plazo:», «Respuesta directa:», «Detalle importante:»). \
+Después cuenta el contexto: quién debe hacerlo, ante quién, bajo qué condiciones y qué cambia según el caso, y cierra con la \
+salvedad o el siguiente paso si importa. Usa conectores («además», «sin embargo», «por eso») para que se lea como un relato y \
+no como una lista. Sin encabezados, sin viñetas, sin preámbulo («Buscaré…»). No digas «fragmento», «pasaje» ni «según el texto»; \
+pon la cita [n] al final de la frase que la usa, sin repetir la pregunta. Texto plano, máximo 220 palabras."""
 
 PLAN_TOOL = {"type": "function", "function": {
     "name": "plan",
@@ -215,6 +217,37 @@ def load_conflicts(path: Path, p_min: float = 0.9) -> dict[str, list[dict]]:
     return out
 
 
+SUGGEST_SYSTEM = (
+    "Propones preguntas de seguimiento para un analista de cumplimiento bancario. Responde SOLO un JSON: "
+    '{"preguntas": ["...", "...", "..."]}. Reglas: tres preguntas en español, de 6 a 16 palabras, distintas entre sí y de la original, '
+    "que se puedan responder con las normas vistas o sus vecinas (nombra la norma o el tema concreto) y que cubran ángulos distintos: "
+    "un detalle más hondo, una comparación entre normas o versiones, una consecuencia práctica. Si la respuesta fue «No encontré "
+    "sustento», propón preguntas cercanas que SÍ tengan respuesta en las normas vistas.")
+
+
+def parse_questions(text: str, original: str, limit: int = 3) -> list[str]:
+    """De la salida del modelo a hasta tres preguntas validas; nunca lanza (las sugerencias no pueden romper una respuesta)."""
+    raw: list = []
+    try:
+        raw = json.loads(re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M).strip()).get("preguntas", [])
+    except (json.JSONDecodeError, AttributeError):
+        raw = re.findall(r"¿[^?\n]{4,200}\?", text)
+    out: list[str] = []
+    for q in raw:
+        q = " ".join(str(q).split()).strip(" -•")
+        if 8 <= len(q) <= 200 and "?" in q and q.lower() != original.strip().lower() and q not in out:
+            out.append(q)
+    return out[:limit]
+
+
+STARTER_SYSTEM = (
+    "Propones preguntas para que un analista pruebe un asistente que responde con normas bancarias peruanas (SBS, decretos) e "
+    "internacionales (Basilea, GAFI, UE). Responde SOLO un JSON: {\"preguntas\": [seis preguntas]}. Reglas: español natural, de 8 a 18 palabras, "
+    "distintas entre sí y respondibles con los fragmentos dados; nombra la norma o el tema concreto cuando ayude; varía el tipo: una "
+    "definición, un plazo o una cifra, una comparación entre dos normas, qué exige la SBS frente a Basilea o el GAFI, y algo que una "
+    "norma remite a otra o que cambió con el tiempo.")
+
+
 STRATEGY_ES = {"direct": "directa", "multi_query": "varias reformulaciones", "compare": "comparar normas", "multi_hop": "varios saltos"}
 
 
@@ -246,6 +279,8 @@ def narrate(ev: dict) -> str:
         return ev["summary"]
     if t == "model":
         return f"Cambio de {ev.get('from')} a {ev['to']}: {ev.get('reason', '')}."
+    if t == "suggest":
+        return f"Propongo {len(ev['questions'])} preguntas para seguir."
     if t == "draft":
         return "Redacté la respuesta con lo que leí."
     if t == "verify":
@@ -285,6 +320,7 @@ class State(TypedDict, total=False):
     model: str
     plan: dict
     max_calls: int
+    follow_ups: list[str]
 
 
 @dataclass
@@ -412,6 +448,23 @@ class AgenticAgent:
         out = compose(text, tb.hits, s["scenario"], self.risk_rules)
         return {**out, "events": [{"type": "deliver", "status": out["status"], "risk": out["risk"], "claims": len(out["claims"])}]}
 
+    def suggest(self, s: State) -> State:
+        """Preguntas de seguimiento ancladas en las normas vistas; si falla, no hay sugerencias y la respuesta sigue igual."""
+        tb = s["tb"]
+        seen = "; ".join(dict.fromkeys(short(h, self.retriever.rows) for h in tb.hits[:8])) or "ninguna"
+        user = f"Pregunta: {s['question']}\nRespuesta: {s.get('summary', '')[:900]}\nNormas y artículos vistos: {seen}"
+        try:
+            reply = self.provider.chat([{"role": "system", "content": SUGGEST_SYSTEM}, {"role": "user", "content": user}], None,
+                                       PROMPT_VERSION + "-suggest", model=self.models[0])
+        except Exception:  # noqa: BLE001 - sugerir es opcional
+            return {"follow_ups": [], "events": []}
+        u = dict(s.get("usage", {}))
+        u.update(tokens_in=u.get("tokens_in", 0) + reply.tokens_in, tokens_out=u.get("tokens_out", 0) + reply.tokens_out,
+                 cost_usd=round(u.get("cost_usd", 0.0) + reply.cost_usd, 6), calls=u.get("calls", 0) + 1)
+        questions = parse_questions(reply.message.get("content") or "", s["question"])
+        return {"follow_ups": questions, "usage": {**s.get("usage", {}), **{k: u[k] for k in ("tokens_in", "tokens_out", "cost_usd", "calls")}},
+                "events": [{"type": "suggest", "questions": questions}] if questions else []}
+
     def reject(self, s: State) -> State:
         tb = s["tb"]
         lines = [f"[{i}] {short(h, self.retriever.rows)}" for i, h in enumerate(tb.hits[:3], 1)]
@@ -432,7 +485,7 @@ class AgenticAgent:
 
     def graph(self):
         g = StateGraph(State)
-        for name in ("plan", "agent", "tools", "verify", "fix", "deliver", "reject", "ledger"):
+        for name in ("plan", "agent", "tools", "verify", "fix", "deliver", "suggest", "reject", "ledger"):
             g.add_node(name, getattr(self, name))
         g.add_edge(START, "plan")
         g.add_edge("plan", "agent")
@@ -440,7 +493,8 @@ class AgenticAgent:
         g.add_edge("tools", "agent")
         g.add_conditional_edges("verify", self.after_verify, {"deliver": "deliver", "fix": "fix", "reject": "reject"})
         g.add_edge("fix", "agent")
-        g.add_edge("deliver", "ledger")
+        g.add_edge("deliver", "suggest")
+        g.add_edge("suggest", "ledger")
         g.add_edge("reject", "ledger")
         g.add_edge("ledger", END)
         return g.compile()
@@ -453,7 +507,7 @@ class AgenticAgent:
         tb = Toolbox(self.retriever, as_of, self.conflicts)
         scenario = detect_scenario(question)
         state: dict = {"question": question, "as_of": as_of, "thread_id": thread_id or uuid.uuid4().hex[:12], "scenario": scenario,
-                       "tb": tb, "model": self.models[0], "plan": {}, "max_calls": MAX_CALLS, "calls": 0, "fixes": 0, "faults": [], "usage": {}, "hits": [], "lists": {}, "ppr_new": 0, "mean6": None,
+                       "tb": tb, "model": self.models[0], "plan": {}, "max_calls": MAX_CALLS, "follow_ups": [], "calls": 0, "fixes": 0, "faults": [], "usage": {}, "hits": [], "lists": {}, "ppr_new": 0, "mean6": None,
                        "messages": [{"role": "system", "content": SYSTEM},
                                     {"role": "user", "content": f"Fecha de consulta: {as_of}\nPregunta: {question}"}]}
         start = {"type": "start", "thread_id": state["thread_id"], "question": question, "as_of": as_of, "scenario": scenario, "ms": 0}

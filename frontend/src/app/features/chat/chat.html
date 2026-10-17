@@ -5,19 +5,18 @@
       <h1 class="page-title">Consulta normativa</h1>
       <p class="page-subtitle">Un agente que busca en las 17 normas, lee, verifica cada cita y te cuenta lo que hace mientras responde.</p>
     </div>
-    <label class="asof">
-      <span class="muted">Vigencia al</span>
-      <input class="input mono" type="date" [value]="asOf()" (input)="asOf.set($any($event.target).value)" />
-    </label>
   </div>
 
   <div class="thread" #thread>
     @if (!turns().length) {
       <div class="empty">
-        <p class="muted">Prueba con una de estas:</p>
+        <p class="muted">El agente propone estas preguntas a partir de las normas:</p>
         <div class="suggestions">
-          @for (s of suggestions; track s) { <button class="btn btn-secondary btn-sm" (click)="ask(s)">{{ s }}</button> }
+          @for (s of suggestions(); track s) { <button class="btn btn-secondary btn-sm" (click)="ask(s)">{{ s }}</button> }
         </div>
+        <button class="refresh" (click)="loadSuggestions(true)" [disabled]="refreshing()">
+          <app-icon [name]="refreshing() ? 'circle-notch' : 'arrows-clockwise'" size="sm" [class.spin]="refreshing()" /> Otras preguntas
+        </button>
       </div>
     }
     @for (t of turns(); track $index; let i = $index) {
@@ -28,7 +27,7 @@
           @if (t.steps.length) {
             <button class="steps-toggle" (click)="toggle(i)">
               <app-icon [name]="t.done ? 'check-circle' : 'circle-notch'" size="sm" [class.spin]="!t.done" />
-              <span>{{ t.done ? 'Cómo lo resolvió' : 'Trabajando…' }} · {{ t.steps.length }} pasos</span>
+              <span>{{ t.done ? 'Cómo lo resolvió' : 'Trabajando…' }} · {{ t.steps.length }} pasos · <b class="clock">{{ elapsed(t) }}</b></span>
               <app-icon [name]="t.open ? 'caret-up' : 'caret-down'" size="xs" />
             </button>
             @if (t.open) {
@@ -44,7 +43,14 @@
                         </div>
                       }
                     </div>
-                    <span class="step-ms muted">{{ seconds(s.ms) }}</span>
+                    @if (s.kind !== 'start') { <span class="step-ms muted">{{ seconds(s.ms) }}</span> }
+                  </li>
+                }
+                @if (!t.done) {
+                  <li class="step live">
+                    <app-icon name="circle-notch" size="sm" class="spin" />
+                    <div class="step-body"><p>Pensando…</p></div>
+                    <span class="step-ms clock">{{ idle(t) }}</span>
                   </li>
                 }
               </ol>
@@ -93,7 +99,12 @@
                 <span>La respuesta toca una versión no vigente o una contradicción: queda para revisión de una persona.</span>
               </div>
             }
-            <p class="meta muted">{{ models(a) }} · {{ a.trace.tool_calls }} consultas · {{ seconds(a.trace.latency_ms) }} · {{ usd(a.trace.cost_usd) }} USD · vigencia al {{ a.as_of }}</p>
+            @if (a.follow_ups?.length && !busy()) {
+              <div class="followups">
+                <p class="section-label">Para seguir</p>
+                @for (q of a.follow_ups; track q) { <button class="followup" (click)="ask(q)">{{ q }}</button> }
+              </div>
+            }
           } @else if (t.draft) {
             <p class="answer draft">{{ t.draft }}</p>
           }

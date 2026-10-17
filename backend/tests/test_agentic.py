@@ -124,3 +124,16 @@ def test_herramientas_leen_vecinos_y_escalate():
     assert [t["name"] for t in tools] == ["search", "read", "neighbors", "escalate"]
     assert any(e["type"] == "model" for e in events)
     assert final["calls"] == 3                       # escalate no gasta presupuesto
+
+
+def test_propone_preguntas_de_seguimiento_y_nunca_rompe_la_respuesta():
+    a = agent([msg(None, call("plan", {"complexity": 1, "strategy": "direct", "reason": "r"})),
+               msg(None, call("search", {"query": "x"}, 2)), msg("Son 24 horas [1]."),
+               msg('```json\n{"preguntas": ["¿Quién califica la operación como sospechosa en la empresa?", "¿Y la comunicación a la UIF cómo se envía?", "no es pregunta"]}\n```')])
+    events, final = kinds(a)
+    assert [e["type"] for e in events][-2:] == ["deliver", "suggest"]
+    assert final["follow_ups"] == ["¿Quién califica la operación como sospechosa en la empresa?", "¿Y la comunicación a la UIF cómo se envía?"]
+    b = agent([msg(None, call("plan", {"complexity": 1, "strategy": "direct", "reason": "r"})),
+               msg(None, call("search", {"query": "x"}, 2)), msg("Son 24 horas [1]."), msg("texto sin json ni preguntas")])
+    _, final2 = kinds(b)
+    assert final2["follow_ups"] == [] and final2["status"] == "ok"

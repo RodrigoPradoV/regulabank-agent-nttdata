@@ -33,7 +33,7 @@ export interface Trace {
 }
 export interface Answer {
   schema_version: string; thread_id: string; status: AnswerStatus; risk: RiskLevel; as_of: string; summary: string;
-  claims: Claim[]; history: HistoryItem[]; trace: Trace;
+  claims: Claim[]; history: HistoryItem[]; trace: Trace; follow_ups?: string[];
 }
 export interface Conflict {
   id: string; policy_chunk_id: string; policy_citation: string; policy_quote: string; norm_version_id: string;
@@ -64,7 +64,7 @@ export const AREA_LABEL: Record<StageArea, string> = { corpus: 'Corpus', graph: 
 // Eventos del agente (Server-Sent Events de POST /answer/stream): cada uno trae `say`, una frase lista para mostrar.
 export interface StepItem { n: number; cita: string; vigente: boolean; fragmento: string; }
 export interface AgentEvent {
-  type: 'start' | 'plan' | 'think' | 'tool' | 'model' | 'draft' | 'verify' | 'deliver' | 'final' | 'error';
+  type: 'start' | 'plan' | 'think' | 'tool' | 'model' | 'draft' | 'verify' | 'deliver' | 'suggest' | 'final' | 'error';
   say?: string; ms?: number; name?: string; args?: Record<string, unknown>; summary?: string; items?: StepItem[];
   complexity?: number; strategy?: string; budget?: number; model?: string; text?: string; ok?: boolean; faults?: string[];
   from?: string; to?: string; reason?: string; status?: string; claims?: number; answer?: Answer; message?: string; scenario?: string;

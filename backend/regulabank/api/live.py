@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pyarrow.parquet as pq
 
-from regulabank.agents.agentic import PROMPT_VERSION, AgenticAgent, load_conflicts
+from regulabank.agents.agentic import PROMPT_VERSION, STARTER_SYSTEM, AgenticAgent, load_conflicts, parse_questions
 from regulabank.agents.llm import load_provider
 from regulabank.api import contracts as c
 from regulabank.graphs import embed as embed_mod
@@ -26,6 +26,7 @@ class Live:
     def __init__(self, release: Path, provider_kind: str | None = None):
         settings = config.load()
         emb = embed_mod.load_embedder(settings.embed_model, "intfloat/multilingual-e5-small", 32)
+        self.release = release
         self.retriever = Retriever(release, emb)
         self.retriever.p["top_k"] = 8
         provider = load_provider(provider_kind, cache_dir=release / "llm-cache")
@@ -104,6 +105,32 @@ class Live:
         arts = [a for a in (self._article(i) for i in dict.fromkeys(r["article_id"] for r in rows)) if a]
         return c.NormDetail(**summary.model_dump(), articles=arts)
 
+    def suggestions(self, fresh: bool = False) -> list[str]:
+        """Preguntas para empezar, propuestas por el modelo a partir de fragmentos de normas distintas (cache en release/suggestions.json)."""
+        import json as _json
+        import random
+
+        path = self.release / "suggestions.json"
+        if not fresh and path.exists():
+            return _json.loads(path.read_text(encoding="utf-8"))["questions"]
+        rows = [r for r in self.retriever.rows.values() if 500 <= len(r["text"]) <= 1600 and r["node_type"] in ("article", "numbered_section", "numeral", "recommendation")]
+        by_norm: dict[str, list[dict]] = defaultdict(list)
+        for r in rows:
+            by_norm[r["norm_id"]].append(r)
+        rng = random.Random()
+        norms = rng.sample(sorted(by_norm), k=min(9, len(by_norm)))
+        frag = "\n\n".join(f"[{r['citation']}]\n{' '.join(r['text'].split())[:420]}" for r in (rng.choice(by_norm[n]) for n in norms))
+        try:
+            reply = self.agent.provider.chat([{"role": "system", "content": STARTER_SYSTEM}, {"role": "user", "content": "Fragmentos:\n" + frag}],
+                                             None, PROMPT_VERSION + "-starter-" + str(rng.random()), model=self.agent.models[0])
+            qs = parse_questions(reply.message.get("content") or "", "", limit=6)
+        except Exception:  # noqa: BLE001 - sin modelo no hay sugerencias nuevas; se devuelven las guardadas
+            qs = []
+        if len(qs) >= 4:
+            path.write_text(_json.dumps({"questions": qs}, ensure_ascii=False), encoding="utf-8")
+            return qs
+        return _json.loads(path.read_text(encoding="utf-8"))["questions"] if path.exists() else []
+
     def _to_answer(self, s: dict, events: list[dict]) -> c.Answer:
         rows = self.retriever.rows
         claims = []
@@ -121,7 +148,7 @@ class Live:
                         latency_ms=s["timings_ms"].get("total", 0), cost_usd=u.get("cost_usd", 0.0), model=u.get("model", "none"),
                         prompt_version=PROMPT_VERSION, tool_calls=s.get("calls", 0), models=models)
         return c.Answer(thread_id=s["thread_id"], status=s["status"], risk=s["risk"], as_of=s["as_of"], summary=s["summary"],
-                        claims=claims, history=[], trace=trace)
+                        claims=claims, history=[], trace=trace, follow_ups=s.get("follow_ups", []))
 
     def answer(self, req: c.AnswerRequest) -> c.Answer:
         events: list[dict] = []

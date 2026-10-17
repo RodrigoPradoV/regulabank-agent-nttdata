@@ -41,6 +41,7 @@ export class ApiService {
       return () => ctl.abort();
     });
   }
+  suggestions(fresh = false): Observable<{ questions: string[] }> { return this.http.get<{ questions: string[] }>(`${API_URL}/suggestions${fresh ? '?fresh=true' : ''}`); }
   conflicts(): Observable<Conflict[]> { return this.http.get<Conflict[]>(`${API_URL}/conflicts`); }
   pipeline(): Observable<Pipeline> { return this.http.get<Pipeline>(`${API_URL}/pipeline`); }
   decide(id: string, d: Decision): Observable<Conflict> { return this.http.post<Conflict>(`${API_URL}/conflicts/${id}/decide`, d); }

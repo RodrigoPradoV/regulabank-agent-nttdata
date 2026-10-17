@@ -31,16 +31,19 @@ scp -q "$ROOT/deploy/regulabank-api.service" $H:/etc/systemd/system/regulabank-a
 ssh $H 'systemctl daemon-reload && systemctl enable regulabank-api'
 if [ "$KEY_OK" = 1 ]; then ssh $H 'systemctl restart regulabank-api && sleep 10 && systemctl is-active regulabank-api && curl -sf http://127.0.0.1:3320/health'; fi
 
-echo "== 6. nginx (copia de seguridad, prueba y recarga)"
+echo "== 6. nginx (copia de seguridad FUERA de sites-enabled: nginx carga todo lo que hay ahi; prueba y recarga)"
 scp -q "$ROOT/deploy/nginx-regulabank.conf" $H:/tmp/nginx-regulabank.conf
-ssh $H "set -e; grep -q '# regulabank:' $SITE || { cp $SITE $SITE.bak-regulabank; python3 - <<'PY'
-import re
+ssh $H "set -e; BAK=/root/nginx-backups/capitalfoods.before-regulabank.\$(date +%s); mkdir -p /root/nginx-backups
+if ! grep -q '# regulabank:' $SITE; then
+  cp $SITE \$BAK
+  python3 - <<'PY'
 s=open('$SITE').read(); block=open('/tmp/nginx-regulabank.conf').read()
 marker='  # adexdatatrade:'
 assert marker in s, 'no encuentro el bloque de adexdatatrade para insertar antes'
 open('$SITE','w').write(s.replace(marker, block+'\n'+marker,1))
 PY
-}; nginx -t && systemctl reload nginx || { cp $SITE.bak-regulabank $SITE; nginx -t && systemctl reload nginx; echo 'nginx fallo: restaurado'; exit 4; }"
+  if nginx -t 2>/dev/null; then systemctl reload nginx; else cp \$BAK $SITE; nginx -t; echo 'nginx fallo: restaurado'; exit 4; fi
+fi; nginx -t"
 
 echo "== 7. verificacion publica"
 curl -sf -o /dev/null -w "pagina %{http_code}\n" https://capitalfoods.studio/regulabank/

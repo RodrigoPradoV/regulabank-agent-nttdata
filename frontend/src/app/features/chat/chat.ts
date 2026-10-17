@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, effect, inject, signal, viewChild } from '@angular/core';
 import { ApiService } from '../../core/api.service';
 import { ShelfService } from '../../core/shelf.service';
 import { AgentEvent, Answer, Claim } from '../../core/models';
@@ -7,7 +7,7 @@ import { Icon } from '../../shared/icon/icon';
 interface Step { kind: AgentEvent['type']; say: string; name?: string; items: NonNullable<AgentEvent['items']>; ms: number; ok?: boolean; }
 interface Turn {
   role: 'user' | 'assistant'; text: string; steps: Step[]; answer?: Answer; draft?: string; done: boolean;
-  open: boolean; active: number | null; error?: string;
+  open: boolean; active: number | null; error?: string; startedAt: number; lastAt: number; endedAt?: number;
 }
 interface Part { t?: string; n?: number; }
 
@@ -21,7 +21,7 @@ const SUGGESTIONS = [
 
 const ICON: Record<string, string> = {
   start: 'compass', plan: 'lightbulb', think: 'chat-circle-dots', model: 'lightning', draft: 'pencil-simple-line',
-  verify: 'shield-check', deliver: 'check-circle', search: 'magnifying-glass', read: 'book-open-text', refers_to: 'link',
+  verify: 'shield-check', deliver: 'check-circle', suggest: 'sparkle', search: 'magnifying-glass', read: 'book-open-text', refers_to: 'link',
   neighbors: 'arrows-out-line-horizontal', conflicts: 'warning', escalate: 'lightning',
 };
 
@@ -34,19 +34,37 @@ const ICON: Record<string, string> = {
 })
 export class Chat {
   private readonly api = inject(ApiService);
+  private readonly destroyRef = inject(DestroyRef);
+  /** Reloj para el contador de segundos: solo corre mientras el agente trabaja. */
+  readonly now = signal(Date.now());
+  private timer: ReturnType<typeof setInterval> | null = null;
   readonly shelf = inject(ShelfService);
-  readonly suggestions = SUGGESTIONS;
+  readonly suggestions = signal<string[]>(SUGGESTIONS);
+  readonly refreshing = signal(false);
   readonly turns = signal<Turn[]>([]);
   readonly draft = signal('');
-  readonly asOf = signal(new Date().toISOString().slice(0, 10));
   readonly busy = signal(false);
   readonly threadId = signal<string | null>(null);
   private readonly threadEl = viewChild<ElementRef<HTMLElement>>('thread');
 
   constructor() {
     // Al llegar un paso o un turno nuevo, el hilo baja al final.
+    this.destroyRef.onDestroy(() => this.stopClock());
+    this.loadSuggestions(false);
     effect(() => { this.turns(); queueMicrotask(() => { const el = this.threadEl()?.nativeElement; if (el) { el.scrollTop = el.scrollHeight; } }); });
   }
+
+  /** Preguntas para empezar: las propone el agente a partir del corpus; la lista fija solo cubre un servicio caido. */
+  loadSuggestions(fresh: boolean): void {
+    this.refreshing.set(true);
+    this.api.suggestions(fresh).subscribe({
+      next: r => { if (r.questions.length) { this.suggestions.set(r.questions); } this.refreshing.set(false); },
+      error: () => this.refreshing.set(false),
+    });
+  }
+
+  private startClock(): void { this.stopClock(); this.now.set(Date.now()); this.timer = setInterval(() => this.now.set(Date.now()), 100); }
+  private stopClock(): void { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
 
   private patch(fn: (t: Turn) => Turn): void {
     this.turns.update(ts => ts.map((t, i) => (i === ts.length - 1 ? fn(t) : t)));
@@ -54,25 +72,26 @@ export class Chat {
 
   ask(text = this.draft().trim()): void {
     if (!text || this.busy()) { return; }
-    this.turns.update(t => [...t, { role: 'user', text, steps: [], done: true, open: false, active: null },
-      { role: 'assistant', text: '', steps: [], done: false, open: true, active: null }]);
-    this.draft.set(''); this.busy.set(true);
-    this.api.answerStream({ question: text, as_of: this.asOf(), thread_id: this.threadId() }).subscribe({
+    const t0 = Date.now();
+    this.turns.update(t => [...t, { role: 'user', text, steps: [], done: true, open: false, active: null, startedAt: t0, lastAt: t0 },
+      { role: 'assistant', text: '', steps: [], done: false, open: true, active: null, startedAt: t0, lastAt: t0 }]);
+    this.draft.set(''); this.busy.set(true); this.startClock();
+    this.api.answerStream({ question: text, thread_id: this.threadId() }).subscribe({
       next: ev => this.onEvent(ev),
-      error: () => { this.patch(t => ({ ...t, done: true, open: false, error: 'No pude contactar al servicio del agente.' })); this.busy.set(false); },
-      complete: () => this.busy.set(false),
+      error: () => { this.patch(t => ({ ...t, done: true, open: false, endedAt: Date.now(), error: 'No pude contactar al servicio del agente.' })); this.busy.set(false); this.stopClock(); },
+      complete: () => { this.busy.set(false); this.stopClock(); },
     });
   }
 
   private onEvent(ev: AgentEvent): void {
     if (ev.type === 'final' && ev.answer) {
       this.threadId.set(ev.answer.thread_id);
-      this.patch(t => ({ ...t, answer: ev.answer, draft: undefined, done: true, open: false, active: null }));
+      this.patch(t => ({ ...t, answer: ev.answer, draft: undefined, done: true, open: false, active: null, endedAt: Date.now() }));
       return;
     }
-    if (ev.type === 'error') { this.patch(t => ({ ...t, done: true, open: false, error: ev.message ?? 'Error del agente' })); return; }
+    if (ev.type === 'error') { this.patch(t => ({ ...t, done: true, open: false, endedAt: Date.now(), error: ev.message ?? 'Error del agente' })); return; }
     const step: Step = { kind: ev.type, say: ev.say ?? '', name: ev.name, items: ev.items ?? [], ms: ev.ms ?? 0, ok: ev.ok };
-    this.patch(t => ({ ...t, steps: [...t.steps, step], draft: ev.type === 'draft' ? ev.text : t.draft }));
+    this.patch(t => ({ ...t, steps: [...t.steps, step], lastAt: Date.now(), draft: ev.type === 'draft' ? ev.text : t.draft }));
   }
 
   /** El texto con las citas [n] separadas para mostrarlas como numeritos dentro de la frase. */
@@ -92,6 +111,10 @@ export class Chat {
   pages(c: Claim): string { const m = /\{[^}]*?(pp?\.\s*[\d\-–, ]+)/.exec(c.citation); return m ? m[1].trim() : ''; }
   vigencia(c: Claim): string { return c.is_current === false ? 'no vigente a la fecha' : c.valid_from ? `vigente desde ${c.valid_from}` : 'vigente'; }
   icon(s: Step): string { return ICON[s.name ?? ''] ?? ICON[s.kind] ?? 'dot'; }
+  /** Tiempo total del turno: corre en vivo y se congela al terminar. */
+  elapsed(t: Turn): string { return this.seconds((t.endedAt ?? this.now()) - t.startedAt); }
+  /** Tiempo desde el ultimo paso: lo que lleva «pensando» el agente. */
+  idle(t: Turn): string { return this.seconds(this.now() - t.lastAt); }
   seconds(ms: number): string { return (ms / 1000).toFixed(1).replace('.', ',') + ' s'; }
   usd(x: number): string { return x < 0.01 ? x.toFixed(4).replace('.', ',') : x.toFixed(2).replace('.', ','); }
   models(a: Answer): string { return (a.trace.models?.length ? a.trace.models : [a.trace.model]).join(' → '); }

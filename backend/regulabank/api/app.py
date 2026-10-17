@@ -51,6 +51,12 @@ def answer(req: c.AnswerRequest) -> c.Answer:
     return live.answer(req) if live else mock.answer(req)
 
 
+@app.get("/suggestions")
+def suggestions(fresh: bool = False) -> dict:
+    """Preguntas para empezar, propuestas por el agente a partir del corpus; `fresh=true` pide otras nuevas."""
+    return {"questions": live.suggestions(fresh) if live else []}
+
+
 @app.post("/answer/stream")
 def answer_stream(req: c.AnswerRequest) -> StreamingResponse:
     """Los pasos del agente (busca, lee, verifica, responde) como Server-Sent Events; el ultimo, `final`, trae la respuesta."""
